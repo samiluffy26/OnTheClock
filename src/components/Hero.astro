@@ -1,0 +1,59 @@
+---
+import BookingForm from './BookingForm.astro';
+---
+
+<section class="hero">
+  <div class="container hero-container">
+    <div class="hero-content">
+      <h1 class="hero-title">Wheelchair Accessible Rides On Demand</h1>
+      <p class="hero-subtitle">100% Secure door-to-door transportation and care.</p>
+      
+      <div class="hero-image-mobile">
+        <img src="/van-with-person.png" alt="Life Ride Van with Healthcare Provider">
+      </div>
+    </div>
+    
+    <div class="fare-estimate-card">
+      <h2 class="card-title">Fare Estimate</h2>
+      
+      <form id="fareForm" class="fare-form">
+        <div class="form-group">
+          <input type="text" id="pickupLocation" placeholder="Pick-Up Location" required>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="dropoffLocation" placeholder="Drop-Off Location" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <input type="date" id="rideDate" required>
+          </div>
+          <div class="form-group">
+            <input type="time" id="rideTime" required>
+          </div>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="returnTrip">
+          <label for="returnTrip">Add a Return Trip</label>
+        </div>
+        
+        <button type="button" class="btn-submit" onclick="openBookingModal()">Get Estimate</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="hero-image-desktop">
+    <img src="/van-with-person.png" alt="Life Ride Van with Healthcare Provider">
+  </div>
+</section>
+
+<BookingForm />
+
+<script>
+  // Prellenar el modal cuando se hace click en "Get Estimate"
+  document.getElementById('fareForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+  });
+</script>

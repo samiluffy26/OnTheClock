@@ -1,0 +1,840 @@
+---
+---
+
+<div id="booking-modal" class="booking-modal">
+  <div class="booking-modal-content">
+    <button class="close-modal" id="closeModal">&times;</button>
+    
+    <!-- PASO 1: Estimación de Tarifa -->
+    <div id="step1" class="booking-step active">
+      <h2>Fare Estimate</h2>
+      
+      <form id="fareEstimateForm">
+        <div class="form-group">
+          <input type="text" id="pickupLocation" name="pickupLocation" placeholder="Pick-Up Location" required>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="dropoffLocation" name="dropoffLocation" placeholder="Drop-Off Location" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <input type="date" id="rideDate" name="rideDate" required>
+          </div>
+          <div class="form-group">
+            <input type="time" id="rideTime" name="rideTime" required>
+          </div>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="returnTrip" name="returnTrip">
+          <label for="returnTrip">Add a Return Trip</label>
+        </div>
+        
+        <div id="returnTripFields" class="return-trip-fields" style="display: none;">
+          <div class="form-row">
+            <div class="form-group">
+              <input type="date" id="returnDate" name="returnDate">
+            </div>
+            <div class="form-group">
+              <input type="time" id="returnTime" name="returnTime" placeholder="Return Time">
+            </div>
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="waitOnSite" name="waitOnSite">
+            <label for="waitOnSite">Please wait on site for my return trip</label>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-submit">Get Estimate</button>
+      </form>
+    </div>
+    
+    <!-- PASO 2: Resultado de Estimación -->
+    <div id="step2" class="booking-step">
+      <h2>Fare Estimate</h2>
+      
+      <div id="fareResult">
+        <div class="trip-summary">
+          <p id="tripRoute"></p>
+        </div>
+        
+        <div class="fare-options">
+          <div class="fare-option">
+            <span class="fare-type">Standard</span>
+            <span class="fare-price" id="standardPrice">$65.00</span>
+          </div>
+          <div class="fare-option">
+            <span class="fare-type">Wheelchair</span>
+            <span class="fare-price" id="wheelchairPrice">$65.00</span>
+          </div>
+        </div>
+        
+        <button class="btn-submit" id="requestRideBtn">Request A Ride</button>
+      </div>
+    </div>
+    
+    <!-- PASO 3: Formulario Completo de Reserva -->
+    <div id="step3" class="booking-step">
+      <h2>Request a Ride</h2>
+      <p class="step-subtitle">Fill out the form below to request your ride. After submitting, we will contact you with a final confirmation.</p>
+      
+      <form id="fullBookingForm">
+        <!-- Locations -->
+        <div class="form-section">
+          <h3>Locations</h3>
+          <p class="section-description">Search for your origin and destination addresses and select the matching location from the list.</p>
+          
+          <div class="form-group">
+            <label>Origin Address</label>
+            <input type="text" name="pickupLocation" id="pickupLocationFull" placeholder="Select Address" required readonly>
+          </div>
+          
+          <div class="form-group">
+            <label>Destination Address</label>
+            <input type="text" name="dropoffLocation" id="dropoffLocationFull" placeholder="Select Address" required readonly>
+          </div>
+        </div>
+        
+        <!-- Scheduling -->
+        <div class="form-section">
+          <h3>Scheduling</h3>
+          <p class="section-description">Please choose your trip type, and the times and dates for pickup.</p>
+          
+          <div class="form-group">
+            <label>Trip Type</label>
+            <select name="tripType" id="tripType" required>
+              <option value="one-way">One Way</option>
+              <option value="round-trip">Round Trip</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>How would you like to be scheduled?</label>
+            <p class="field-hint">Please select an origin and destination address above.</p>
+          </div>
+        </div>
+        
+        <!-- Vehicle Options -->
+        <div class="form-section">
+          <h3>Vehicle Options</h3>
+          
+          <div class="vehicle-option-card">
+            <h4>Wheelchair Accessible Van</h4>
+            <p>For passengers that are in a wheelchair. Our trained driver will wheel passenger from door to door, secure wheelchair in vehicle and ensure passenger is comfortable.</p>
+          </div>
+          
+          <div class="vehicle-option-card">
+            <h4>Basic Life Support Ambulance</h4>
+            <p>For patients who require basic medical monitoring.</p>
+          </div>
+          
+          <div class="form-group">
+            <label>Vehicle Type</label>
+            <select name="vehicleType" id="vehicleType" required>
+              <option value="standard">Standard Van</option>
+              <option value="wheelchair">Wheelchair Accessible Van</option>
+              <option value="ambulance">Basic Life Support Ambulance</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Passenger Information -->
+        <div class="form-section">
+          <h3>Passenger Information</h3>
+          <p class="section-description">Please provide us the passenger's name, contact, birth date, weight, gender. This will allow us to accommodate the passengers specific needs.</p>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" name="passengerFirstName" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" name="passengerLastName" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="passengerEmail" required>
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" name="passengerPhone" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input type="date" name="passengerDOB">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Weight (lbs)</label>
+              <input type="number" name="passengerWeight">
+            </div>
+            <div class="form-group">
+              <label>Gender</label>
+              <select name="passengerGender">
+                <option value="">-</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Your Information -->
+        <div class="form-section">
+          <h3>Your Information</h3>
+          <p class="section-description">We will contact you at this phone number for payment information and final confirmation.</p>
+          
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="sameAsPassenger" name="sameAsPassenger">
+            <label for="sameAsPassenger">Same as Passenger</label>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" name="contactFirstName" id="contactFirstName" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" name="contactLastName" id="contactLastName" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="contactEmail" id="contactEmail" required>
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" name="contactPhone" id="contactPhone" required>
+            </div>
+          </div>
+        </div>
+        
+        <!-- First Ride Services -->
+        <div class="form-section">
+          <h3>First Ride Services and Equipment</h3>
+          
+          <div class="form-group">
+            <label>Additional Equipment</label>
+            <p class="section-description">Please select any equipment you may need on your trip.</p>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" name="equipment" value="electric-stair-chair" id="equipStair">
+              <label for="equipStair">Electric Stair Chair</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" name="equipment" value="oxygen-tank" id="equipOxygen">
+              <label for="equipOxygen">Oxygen Tank</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Bed Service</label>
+            <p class="section-description">This service will provide the passenger with assistance getting in or out of their bed.</p>
+            
+            <div class="radio-group">
+              <input type="radio" name="bedService" value="none" id="bedNone" checked>
+              <label for="bedNone">None</label>
+            </div>
+            <div class="radio-group">
+              <input type="radio" name="bedService" value="bed-to-room" id="bedToRoom">
+              <label for="bedToRoom">Bed to Room - Passenger will need help getting out of bed at their origin address.</label>
+            </div>
+            <div class="radio-group">
+              <input type="radio" name="bedService" value="room-to-bed" id="roomToBed">
+              <label for="roomToBed">Room to Bed - Passenger will need help getting into bed at the destination address.</label>
+            </div>
+            <div class="radio-group">
+              <input type="radio" name="bedService" value="bed-to-bed" id="bedToBed">
+              <label for="bedToBed">Bed to Bed - Passenger will need help getting out of bed at the origin address and back into bed at the destination address.</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Additional Assistance</label>
+            <p class="section-description">Select any additional assistance needed at the origin or destination addresses. An extra person will be sent out to help with the service.</p>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" name="assistOrigin" id="assistOrigin">
+              <label for="assistOrigin">Provide Assist - Origin Address</label>
+</div>
+<div class="checkbox-group">
+<input type="checkbox" name="assistDestination" id="assistDestination">
+<label for="assistDestination">Provide Assist - Destination Address</label>
+</div>
+</div>
+</div>
+    <!-- Notes -->
+    <div class="form-section">
+      <h3>Notes</h3>
+      <p class="section-description">If there are any special requirements, pickup instructions and/or information we need please let us know here.</p>
+      
+      <div class="form-group">
+        <textarea name="notes" id="notes" rows="5" placeholder="Trip Notes"></textarea>
+      </div>
+    </div>
+    
+    <!-- Policy Agreement -->
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="agreePolicy" name="agreePolicy" required>
+      <label for="agreePolicy">You have read and agree to our <a href="#cancellation" target="_blank">cancellation policy</a>.</label>
+    </div>
+    
+    <button type="submit" class="btn-submit" id="submitBooking">Continue</button>
+  </form>
+</div>
+
+<!-- PASO 4: Confirmación -->
+<div id="step4" class="booking-step">
+  <div class="confirmation-content">
+    <div class="success-icon">✓</div>
+    <h2>Booking Request Submitted!</h2>
+    <p>Thank you for choosing Life Ride. We've received your request and will contact you shortly to confirm all details.</p>
+    <p>A confirmation email has been sent to <strong id="confirmEmail"></strong></p>
+    
+    <div class="confirmation-details">
+      <h3>Booking Summary</h3>
+      <div id="bookingSummary"></div>
+    </div>
+    
+    <button class="btn-secondary" id="closeConfirmation">Close</button>
+  </div>
+</div>
+
+<style>
+.booking-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.6);
+  padding: 20px;
+}
+
+.booking-modal.active {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.booking-modal-content {
+  background-color: #fefefe;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.close-modal {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #aaa;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+}
+
+.close-modal:hover {
+  color: #000;
+}
+
+.booking-step {
+  display: none;
+}
+
+.booking-step.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.booking-modal h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-dark);
+}
+
+.step-subtitle {
+  text-align: center;
+  color: var(--text-light);
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.return-trip-fields {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* Fare Result Styles */
+.trip-summary {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.fare-options {
+  margin: 20px 0;
+}
+
+.fare-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin: 10px 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.fare-type {
+  font-weight: 600;
+}
+
+.fare-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* Full Form Styles */
+.form-section {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.form-section h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.section-description {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 15px;
+}
+
+.field-hint {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+.vehicle-option-card {
+  background: white;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.vehicle-option-card h4 {
+  margin-top: 0;
+  color: var(--text-dark);
+}
+
+.vehicle-option-card p {
+  font-size: 14px;
+  color: var(--text-light);
+  margin: 5px 0 0 0;
+}
+
+.radio-group {
+  margin: 10px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.radio-group input[type="radio"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.radio-group label {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--bg-gray);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+/* Confirmation Styles */
+.confirmation-content {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  margin: 0 auto 20px;
+}
+
+.confirmation-details {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.confirmation-details h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+  .booking-modal-content {
+    margin: 20px auto;
+    padding: 20px;
+    max-height: 95vh;
+  }
+  
+  .form-section {
+    padding: 15px;
+  }
+}
+</style>
+<script>
+  // Variables globales
+  let currentStep = 1;
+  let fareData = null;
+  let bookingData = {};
+
+  // Elementos del DOM
+  const modal = document.getElementById('booking-modal');
+  const closeModalBtn = document.getElementById('closeModal');
+  const fareEstimateForm = document.getElementById('fareEstimateForm');
+  const fullBookingForm = document.getElementById('fullBookingForm');
+  const returnTripCheckbox = document.getElementById('returnTrip');
+  const returnTripFields = document.getElementById('returnTripFields');
+  const sameAsPassengerCheckbox = document.getElementById('sameAsPassenger');
+
+  // Función para abrir el modal
+  function openBookingModal() {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Función para cerrar el modal
+  function closeBookingModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+    resetForm();
+  }
+
+  // Función para cambiar de paso
+  function goToStep(step) {
+    // Ocultar todos los pasos
+    document.querySelectorAll('.booking-step').forEach(s => {
+      s.classList.remove('active');
+    });
+    
+    // Mostrar el paso actual
+    document.getElementById(`step${step}`).classList.add('active');
+    currentStep = step;
+    
+    // Scroll al inicio del modal
+    modal.scrollTop = 0;
+  }
+
+  // Función para resetear el formulario
+  function resetForm() {
+    currentStep = 1;
+    fareData = null;
+    bookingData = {};
+    fareEstimateForm.reset();
+    fullBookingForm.reset();
+    goToStep(1);
+  }
+
+  // Toggle return trip fields
+  returnTripCheckbox.addEventListener('change', function() {
+    returnTripFields.style.display = this.checked ? 'block' : 'none';
+    if (!this.checked) {
+      document.getElementById('returnDate').value = '';
+      document.getElementById('returnTime').value = '';
+      document.getElementById('waitOnSite').checked = false;
+    }
+  });
+
+  // Same as passenger checkbox
+  sameAsPassengerCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      const passengerFirstName = document.querySelector('input[name="passengerFirstName"]').value;
+      const passengerLastName = document.querySelector('input[name="passengerLastName"]').value;
+      const passengerEmail = document.querySelector('input[name="passengerEmail"]').value;
+      const passengerPhone = document.querySelector('input[name="passengerPhone"]').value;
+      
+      document.getElementById('contactFirstName').value = passengerFirstName;
+      document.getElementById('contactLastName').value = passengerLastName;
+      document.getElementById('contactEmail').value = passengerEmail;
+      document.getElementById('contactPhone').value = passengerPhone;
+    } else {
+      document.getElementById('contactFirstName').value = '';
+      document.getElementById('contactLastName').value = '';
+      document.getElementById('contactEmail').value = '';
+      document.getElementById('contactPhone').value = '';
+    }
+  });
+
+  // Manejar envío del formulario de estimación
+  fareEstimateForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(fareEstimateForm);
+    const data = {
+      pickupLocation: formData.get('pickupLocation'),
+      dropoffLocation: formData.get('dropoffLocation'),
+      rideDate: formData.get('rideDate'),
+      rideTime: formData.get('rideTime'),
+      returnTrip: formData.get('returnTrip') === 'on',
+      returnDate: formData.get('returnDate') || null,
+      returnTime: formData.get('returnTime') || null,
+      waitOnSite: formData.get('waitOnSite') === 'on'
+    };
+    
+    // Guardar datos
+    bookingData = { ...data };
+    
+    // Mostrar loading
+    const submitBtn = fareEstimateForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Calculating...';
+    submitBtn.disabled = true;
+    
+    try {
+      // Calcular tarifa para Standard
+      const standardResponse = await fetch('/api/calculate-fare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, vehicleType: 'standard' })
+      });
+      const standardResult = await standardResponse.json();
+      
+      // Calcular tarifa para Wheelchair
+      const wheelchairResponse = await fetch('/api/calculate-fare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, vehicleType: 'wheelchair' })
+      });
+      const wheelchairResult = await wheelchairResponse.json();
+      
+      if (standardResult.success && wheelchairResult.success) {
+        // Mostrar resultados
+        document.getElementById('tripRoute').textContent = 
+          `${data.pickupLocation} → ${data.dropoffLocation}`;
+        document.getElementById('standardPrice').textContent = 
+          `$${standardResult.fare.finalTotal}`;
+        document.getElementById('wheelchairPrice').textContent = 
+          `$${wheelchairResult.fare.finalTotal}`;
+        
+        fareData = {
+          standard: standardResult.fare,
+          wheelchair: wheelchairResult.fare
+        };
+        
+        goToStep(2);
+      } else {
+        alert('Error calculating fare. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error calculating fare. Please try again.');
+    } finally {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Botón "Request A Ride" en paso 2
+  document.getElementById('requestRideBtn').addEventListener('click', function() {
+    // Prellenar formulario completo con datos del paso 1
+    document.getElementById('pickupLocationFull').value = bookingData.pickupLocation;
+    document.getElementById('dropoffLocationFull').value = bookingData.dropoffLocation;
+    
+    goToStep(3);
+  });
+
+  // Manejar envío del formulario completo
+  fullBookingForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(fullBookingForm);
+    
+    // Recopilar equipos seleccionados
+    const equipment = [];
+    document.querySelectorAll('input[name="equipment"]:checked').forEach(input => {
+      equipment.push(input.value);
+    });
+    
+    // Verificar asistencia adicional
+    const additionalAssistance = 
+      formData.get('assistOrigin') === 'on' || 
+      formData.get('assistDestination') === 'on';
+    
+    const fullBookingData = {
+      // Datos del viaje
+      pickupLocation: bookingData.pickupLocation,
+      dropoffLocation: bookingData.dropoffLocation,
+      rideDate: bookingData.rideDate,
+      rideTime: bookingData.rideTime,
+      returnTrip: bookingData.returnTrip,
+      returnDate: bookingData.returnDate,
+      returnTime: bookingData.returnTime,
+      waitOnSite: bookingData.waitOnSite,
+      
+      // Tipo de vehículo
+      vehicleType: formData.get('vehicleType'),
+      tripType: formData.get('tripType'),
+      
+      // Información del pasajero
+      passengerFirstName: formData.get('passengerFirstName'),
+      passengerLastName: formData.get('passengerLastName'),
+      passengerEmail: formData.get('passengerEmail'),
+      passengerPhone: formData.get('passengerPhone'),
+      passengerDOB: formData.get('passengerDOB'),
+      passengerWeight: formData.get('passengerWeight'),
+      passengerGender: formData.get('passengerGender'),
+      
+      // Información de contacto
+      contactFirstName: formData.get('contactFirstName'),
+      contactLastName: formData.get('contactLastName'),
+      contactEmail: formData.get('contactEmail'),
+      contactPhone: formData.get('contactPhone'),
+      
+      // Servicios adicionales
+      equipment: equipment,
+      bedService: formData.get('bedService'),
+      additionalAssistance: additionalAssistance,
+      assistOrigin: formData.get('assistOrigin') === 'on',
+      assistDestination: formData.get('assistDestination') === 'on',
+      
+      // Notas
+      notes: formData.get('notes')
+    };
+    
+    // Mostrar loading
+    const submitBtn = document.getElementById('submitBooking');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    
+    try {
+      const response = await fetch('/api/send-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fullBookingData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Mostrar confirmación
+        document.getElementById('confirmEmail').textContent = fullBookingData.passengerEmail;
+        
+        // Crear resumen
+        const summary = `
+          <p><strong>From:</strong> ${fullBookingData.pickupLocation}</p>
+          <p><strong>To:</strong> ${fullBookingData.dropoffLocation}</p>
+          <p><strong>Date:</strong> ${fullBookingData.rideDate} at ${fullBookingData.rideTime}</p>
+          <p><strong>Vehicle:</strong> ${fullBookingData.vehicleType}</p>
+          <p><strong>Estimated Fare:</strong> $${result.fareDetails.finalTotal}</p>
+        `;
+        document.getElementById('bookingSummary').innerHTML = summary;
+        
+        goToStep(4);
+      } else {
+        alert('Error submitting booking. Please try again or call us at (551) 225-0080.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error submitting booking. Please try again or call us at (551) 225-0080.');
+    } finally {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Cerrar modal
+  closeModalBtn.addEventListener('click', closeBookingModal);
+  document.getElementById('closeConfirmation').addEventListener('click', closeBookingModal);
+
+  // Cerrar al hacer click fuera del modal
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeBookingModal();
+    }
+  });
+
+  // Exponer función para abrir modal globalmente
+  window.openBookingModal = openBookingModal;
+
+  // Inicializar fecha mínima
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('rideDate').setAttribute('min', today);
+  document.getElementById('returnDate').setAttribute('min', today);
+</script>
