@@ -15,6 +15,7 @@ const { title, description = "100% Secure door-to-door transportation and care."
     <meta name="description" content={description} />
     <title>{title}</title>
     <link rel="icon" type="image/png" href="/logo.png" />
+    
   </head>
   <body>
     <slot />
@@ -61,36 +62,6 @@ const { title, description = "100% Secure door-to-door transportation and care."
             }
           });
         });
-
-        // Form handling
-        const fareForm = document.getElementById('fareForm');
-        if (fareForm) {
-          fareForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const pickupLocation = document.getElementById('pickupLocation').value;
-            const dropoffLocation = document.getElementById('dropoffLocation').value;
-            const rideDate = document.getElementById('rideDate').value;
-            const rideTime = document.getElementById('rideTime').value;
-            const returnTrip = document.getElementById('returnTrip').checked;
-            
-            if (!pickupLocation || !dropoffLocation || !rideDate || !rideTime) {
-              alert('Por favor complete todos los campos requeridos.');
-              return;
-            }
-            
-            console.log({
-              pickupLocation,
-              dropoffLocation,
-              rideDate,
-              rideTime,
-              returnTrip
-            });
-            
-            alert('Solicitud enviada exitosamente! Nos pondremos en contacto pronto.');
-            fareForm.reset();
-          });
-        }
 
         // Set minimum date
         const dateInput = document.getElementById('rideDate');

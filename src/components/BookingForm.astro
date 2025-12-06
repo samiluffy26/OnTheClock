@@ -837,4 +837,81 @@ textarea {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('rideDate').setAttribute('min', today);
   document.getElementById('returnDate').setAttribute('min', today);
+
+  // ===== GOOGLE PLACES AUTOCOMPLETE =====
+let pickupAutocomplete, dropoffAutocomplete;
+let pickupAutocompleteModal, dropoffAutocompleteModal;
+
+function initAutocomplete() {
+  // Autocomplete para el formulario del hero
+  const pickupInput = document.getElementById('pickupLocation');
+  const dropoffInput = document.getElementById('dropoffLocation');
+  
+  if (pickupInput && typeof google !== 'undefined') {
+    pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+    
+    pickupAutocomplete.addListener('place_changed', function() {
+      const place = pickupAutocomplete.getPlace();
+      if (place.formatted_address) {
+        pickupInput.value = place.formatted_address;
+      }
+    });
+  }
+  
+  if (dropoffInput && typeof google !== 'undefined') {
+    dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+    
+    dropoffAutocomplete.addListener('place_changed', function() {
+      const place = dropoffAutocomplete.getPlace();
+      if (place.formatted_address) {
+        dropoffInput.value = place.formatted_address;
+      }
+    });
+  }
+  
+  // Autocomplete para el modal (paso 1)
+  const pickupInputModal = document.querySelector('#step1 #pickupLocation');
+  const dropoffInputModal = document.querySelector('#step1 #dropoffLocation');
+  
+  if (pickupInputModal && typeof google !== 'undefined') {
+    pickupAutocompleteModal = new google.maps.places.Autocomplete(pickupInputModal, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+    
+    pickupAutocompleteModal.addListener('place_changed', function() {
+      const place = pickupAutocompleteModal.getPlace();
+      if (place.formatted_address) {
+        pickupInputModal.value = place.formatted_address;
+      }
+    });
+  }
+  
+  if (dropoffInputModal && typeof google !== 'undefined') {
+    dropoffAutocompleteModal = new google.maps.places.Autocomplete(dropoffInputModal, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+    
+    dropoffAutocompleteModal.addListener('place_changed', function() {
+      const place = dropoffAutocompleteModal.getPlace();
+      if (place.formatted_address) {
+        dropoffInputModal.value = place.formatted_address;
+      }
+    });
+  }
+}
+
+// Inicializar cuando Google Maps esté listo
+if (typeof google !== 'undefined') {
+  initAutocomplete();
+} else {
+  window.addEventListener('load', initAutocomplete);
+}
 </script>

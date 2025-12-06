@@ -1,0 +1,212 @@
+---
+// src/components/FareEstimate.astro
+const apiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
+---
+
+<section id="fare-estimate" class="py-20 bg-gray-50">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-12">Estima tu tarifa</h2>
+    
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <form id="fare-form">
+        <div class="mb-4 relative">
+          <label for="pickup" class="block text-gray-700 mb-2">Punto de recogida</label>
+          <input 
+            type="text" 
+            id="pickup" 
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingresa la dirección de recogida"
+          />
+          <div id="pickup-suggestions" class="absolute z-10 w-full bg-white border rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+        </div>
+        
+        <div class="mb-4 relative">
+          <label for="destination" class="block text-gray-700 mb-2">Destino</label>
+          <input 
+            type="text" 
+            id="destination" 
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ingresa la dirección de destino"
+          />
+          <div id="destination-suggestions" class="absolute z-10 w-full bg-white border rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+        </div>
+        
+        <button 
+          type="submit" 
+          class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+        >
+          Calcular tarifa
+        </button>
+      </form>
+      
+      <div id="fare-result" class="mt-6 hidden">
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <p class="text-lg font-semibold text-gray-800">Tarifa estimada: <span id="fare-amount"></span></p>
+          <p class="text-sm text-gray-600 mt-2">Distancia: <span id="distance"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script define:vars={{ apiKey }}>
+  let debounceTimer;
+  
+  async function setupAutocomplete(inputId, suggestionsId) {
+    const input = document.getElementById(inputId);
+    const suggestionsDiv = document.getElementById(suggestionsId);
+    
+    if (!input || !suggestionsDiv) return;
+    
+    input.addEventListener('input', async (e) => {
+      const query = e.target.value;
+      
+      // Limpiar timer anterior
+      clearTimeout(debounceTimer);
+      
+      // Ocultar sugerencias si el texto es muy corto
+      if (query.length < 3) {
+        suggestionsDiv.classList.add('hidden');
+        suggestionsDiv.innerHTML = '';
+        return;
+      }
+      
+      // Esperar 300ms después de que el usuario deje de escribir
+      debounceTimer = setTimeout(async () => {
+        try {
+          // Usar Geocoding API (no requiere Places API legacy)
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&components=country:DO&key=${apiKey}`
+          );
+          
+          const data = await response.json();
+          
+          if (data.status === 'OK' && data.results && data.results.length > 0) {
+            showSuggestions(data.results, input, suggestionsDiv);
+          } else {
+            suggestionsDiv.classList.add('hidden');
+            suggestionsDiv.innerHTML = '';
+          }
+        } catch (error) {
+          console.error('Error obteniendo sugerencias:', error);
+          suggestionsDiv.classList.add('hidden');
+        }
+      }, 300);
+    });
+  }
+  
+  function showSuggestions(results, input, suggestionsDiv) {
+    suggestionsDiv.innerHTML = '';
+    suggestionsDiv.classList.remove('hidden');
+    
+    // Mostrar máximo 5 resultados
+    results.slice(0, 5).forEach(result => {
+      const item = document.createElement('div');
+      item.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b last:border-b-0';
+      item.textContent = result.formatted_address;
+      
+      item.addEventListener('click', () => {
+        input.value = result.formatted_address;
+        input.dataset.lat = result.geometry.location.lat;
+        input.dataset.lng = result.geometry.location.lng;
+        suggestionsDiv.classList.add('hidden');
+        suggestionsDiv.innerHTML = '';
+      });
+      
+      suggestionsDiv.appendChild(item);
+    });
+  }
+  
+  async function calculateFare(e) {
+    e.preventDefault();
+    
+    const pickupInput = document.getElementById('pickup');
+    const destinationInput = document.getElementById('destination');
+    
+    const pickup = pickupInput.value;
+    const destination = destinationInput.value;
+    
+    if (!pickup || !destination) {
+      alert('Por favor completa ambas direcciones');
+      return;
+    }
+    
+    // Si tenemos coordenadas, calcular distancia real
+    const pickupLat = pickupInput.dataset.lat;
+    const pickupLng = pickupInput.dataset.lng;
+    const destLat = destinationInput.dataset.lat;
+    const destLng = destinationInput.dataset.lng;
+    
+    const fareResult = document.getElementById('fare-result');
+    const fareAmount = document.getElementById('fare-amount');
+    const distanceSpan = document.getElementById('distance');
+    
+    if (pickupLat && pickupLng && destLat && destLng) {
+      // Calcular distancia usando la fórmula de Haversine
+      const distance = calculateDistance(
+        parseFloat(pickupLat), 
+        parseFloat(pickupLng),
+        parseFloat(destLat),
+        parseFloat(destLng)
+      );
+      
+      // Tarifa base + por kilómetro (ajusta según tus tarifas)
+      const baseFare = 5; // $5 USD base
+      const perKm = 2; // $2 USD por km
+      const estimatedFare = baseFare + (distance * perKm);
+      
+      fareAmount.textContent = `$${estimatedFare.toFixed(2)} USD`;
+      distanceSpan.textContent = `${distance.toFixed(2)} km`;
+    } else {
+      // Estimación genérica si no hay coordenadas
+      fareAmount.textContent = '$25.00 - $35.00 USD';
+      distanceSpan.textContent = '~5 km';
+    }
+    
+    fareResult.classList.remove('hidden');
+  }
+  
+  // Fórmula de Haversine para calcular distancia
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    
+    return distance;
+  }
+  
+  // Cerrar sugerencias al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    const pickupSuggestions = document.getElementById('pickup-suggestions');
+    const destinationSuggestions = document.getElementById('destination-suggestions');
+    const pickupInput = document.getElementById('pickup');
+    const destinationInput = document.getElementById('destination');
+    
+    if (!pickupInput.contains(e.target) && !pickupSuggestions.contains(e.target)) {
+      pickupSuggestions.classList.add('hidden');
+    }
+    
+    if (!destinationInput.contains(e.target) && !destinationSuggestions.contains(e.target)) {
+      destinationSuggestions.classList.add('hidden');
+    }
+  });
+  
+  // Inicializar
+  document.addEventListener('DOMContentLoaded', () => {
+    setupAutocomplete('pickup', 'pickup-suggestions');
+    setupAutocomplete('destination', 'destination-suggestions');
+    
+    const form = document.getElementById('fare-form');
+    if (form) {
+      form.addEventListener('submit', calculateFare);
+    }
+  });
+</script>

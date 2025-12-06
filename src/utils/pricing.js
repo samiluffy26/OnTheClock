@@ -1,12 +1,15 @@
-// Sistema de cálculo de tarifas
-// NOTA: Estos son precios de prueba. Actualiza según los precios reales de la empresa.
+// Sistema de cálculo de tarifas actualizado
+// Precios según especificaciones del cliente
 
 const PRICING_CONFIG = {
-  // Tarifa base por milla
-  baseFarePerMile: 3.5,
+  // Tarifa base: $28 por las primeras 10 millas
+  baseFare10Miles: 28.00,
   
-  // Tarifa mínima
-  minimumFare: 25.00,
+  // Tarifa adicional: $1.75 por milla después de las primeras 10
+  additionalMileRate: 1.75,
+  
+  // Tiempo de espera: $25 por hora
+  waitTimeRate: 25.00,
   
   // Multiplicadores por tipo de vehículo
   vehicleMultipliers: {
@@ -17,8 +20,6 @@ const PRICING_CONFIG = {
   
   // Cargos adicionales
   additionalCharges: {
-    returnTrip: 0.9, // 90% del precio original para viaje de regreso
-    waitTime: 0.5, // $0.50 por minuto de espera
     bedService: {
       'bed-to-room': 15.00,
       'room-to-bed': 15.00,
@@ -29,43 +30,32 @@ const PRICING_CONFIG = {
       'oxygen-tank': 15.00
     },
     additionalAssistance: 20.00
-  },
-  
-  // Estimación de distancia (simulada - en producción usar Google Maps API)
-  estimatedMilesPerLocation: 10 // Millas promedio por defecto
+  }
 };
-
-export function calculateDistance(pickup, dropoff) {
-  // SIMULACIÓN: En producción, usar Google Maps Distance Matrix API
-  // Por ahora retorna una distancia simulada basada en la longitud del texto
-  const baseDistance = PRICING_CONFIG.estimatedMilesPerLocation;
-  const variation = Math.random() * 5; // Variación de 0-5 millas
-  return Math.round((baseDistance + variation) * 10) / 10;
-}
 
 export function calculateFare(bookingData) {
   const {
-    pickupLocation,
-    dropoffLocation,
+    distance, // Distancia en millas (viene de Google Maps)
     vehicleType = 'standard',
     returnTrip = false,
+    waitTime = 0, // En horas
     bedService = 'none',
     equipment = [],
     additionalAssistance = false
   } = bookingData;
 
-  // Calcular distancia
-  const distance = calculateDistance(pickupLocation, dropoffLocation);
-  
-  // Tarifa base
-  let baseFare = distance * PRICING_CONFIG.baseFarePerMile;
-  
-  // Aplicar tarifa mínima
-  if (baseFare < PRICING_CONFIG.minimumFare) {
-    baseFare = PRICING_CONFIG.minimumFare;
+  // Calcular tarifa base según distancia
+  let baseFare;
+  if (distance <= 10) {
+    // Primeras 10 millas: $28
+    baseFare = PRICING_CONFIG.baseFare10Miles;
+  } else {
+    // Primeras 10 millas + millas adicionales
+    const additionalMiles = distance - 10;
+    baseFare = PRICING_CONFIG.baseFare10Miles + (additionalMiles * PRICING_CONFIG.additionalMileRate);
   }
   
-  // Multiplicador por tipo de vehículo
+  // Aplicar multiplicador por tipo de vehículo
   const vehicleMultiplier = PRICING_CONFIG.vehicleMultipliers[vehicleType] || 1.0;
   let totalFare = baseFare * vehicleMultiplier;
   
@@ -91,26 +81,39 @@ export function calculateFare(bookingData) {
     additionalCosts += PRICING_CONFIG.additionalCharges.additionalAssistance;
   }
   
-  // Calcular viaje de ida
-  const oneWayTotal = totalFare + additionalCosts;
+  // Tiempo de espera
+  let waitTimeCost = 0;
+  if (waitTime > 0) {
+    waitTimeCost = waitTime * PRICING_CONFIG.waitTimeRate;
+  }
   
-  // Calcular viaje de regreso si aplica
+  // Calcular viaje de ida
+  const oneWayTotal = totalFare + additionalCosts + waitTimeCost;
+  
+  // Calcular viaje de regreso (se cobra la distancia total completa)
   let returnTripCost = 0;
   if (returnTrip) {
-    returnTripCost = oneWayTotal * PRICING_CONFIG.additionalCharges.returnTrip;
+    // El regreso cuesta lo mismo que la ida (distancia total)
+    returnTripCost = totalFare + additionalCosts;
   }
   
   // Total final
   const finalTotal = oneWayTotal + returnTripCost;
   
   return {
-    distance: distance,
+    distance: distance.toFixed(2),
     baseFare: baseFare.toFixed(2),
     vehicleType: vehicleType,
-    vehicleCharge: (baseFare * vehicleMultiplier - baseFare).toFixed(2),
+    vehicleCharge: ((totalFare - baseFare)).toFixed(2),
     additionalCosts: additionalCosts.toFixed(2),
+    waitTimeCost: waitTimeCost > 0 ? waitTimeCost.toFixed(2) : '0.00',
     oneWayTotal: oneWayTotal.toFixed(2),
     returnTripCost: returnTripCost > 0 ? returnTripCost.toFixed(2) : null,
-    finalTotal: finalTotal.toFixed(2)
+    finalTotal: finalTotal.toFixed(2),
+    breakdown: {
+      baseFare10Miles: distance <= 10 ? baseFare.toFixed(2) : PRICING_CONFIG.baseFare10Miles.toFixed(2),
+      additionalMiles: distance > 10 ? (distance - 10).toFixed(2) : '0.00',
+      additionalMilesCost: distance > 10 ? ((distance - 10) * PRICING_CONFIG.additionalMileRate).toFixed(2) : '0.00'
+    }
   };
 }

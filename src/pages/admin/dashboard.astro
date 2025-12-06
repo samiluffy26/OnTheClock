@@ -1,0 +1,1100 @@
+---
+// src/pages/admin/dashboard.astro
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Life Ride</title>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/logo.png" alt="Life Ride Logo" class="sidebar-logo">
+        <div class="admin-info">
+          <div class="admin-avatar" id="adminAvatar">A</div>
+          <div class="admin-details">
+            <div class="admin-name" id="adminName">Loading...</div>
+            <div class="admin-role" id="adminRole">Admin</div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/admin/dashboard" class="nav-link active">
+            <span class="nav-icon">📊</span>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/" class="nav-link" target="_blank">
+            <span class="nav-icon">🌐</span>
+            View Website
+          </a>
+        </li>
+      </ul>
+
+      <button class="logout-btn" id="logoutBtn">
+        🚪 Logout
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Reviews Management</h1>
+        <p class="page-subtitle">Manage and moderate customer reviews</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-icon blue">📝</div>
+          </div>
+          <div class="stat-value" id="totalReviews">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-icon yellow">⏳</div>
+          </div>
+          <div class="stat-value" id="pendingReviews">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-icon green">✅</div>
+          </div>
+          <div class="stat-value" id="approvedReviews">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-icon red">❌</div>
+          </div>
+          <div class="stat-value" id="rejectedReviews">-</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select class="filter-select" id="statusFilter">
+            <option value="">All Reviews</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Reviews Grid -->
+      <div id="reviewsContainer">
+        <div class="loading">Loading reviews...</div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="paginationContainer" style="display: none;">
+        <div class="pagination-info" id="paginationInfo">
+          Showing 0 of 0 reviews
+        </div>
+        <div class="pagination-buttons">
+          <button class="btn-page" id="prevPageBtn" disabled>← Previous</button>
+          <button class="btn-page" id="nextPageBtn" disabled>Next →</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3001/api';
+    let currentPage = 1;
+    let currentStatus = '';
+    let totalPages = 1;
+    let adminToken = '';
+
+    // Check authentication
+    function checkAuth() {
+      adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        window.location.href = '/admin/login';
+        return false;
+      }
+      return true;
+    }
+
+    // Load admin info
+    async function loadAdminInfo() {
+      try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (response.ok) {
+          const admin = await response.json();
+          document.getElementById('adminName').textContent = admin.name;
+          document.getElementById('adminRole').textContent = admin.role;
+          document.getElementById('adminAvatar').textContent = admin.name.charAt(0).toUpperCase();
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error loading admin info:', error);
+      }
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_URL}/reviews/admin/all`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        const data = await response.json();
+        
+        const total = data.totalReviews;
+        const pending = data.reviews.filter(r => r.status === 'pending').length;
+        const approved = data.reviews.filter(r => r.status === 'approved').length;
+        const rejected = data.reviews.filter(r => r.status === 'rejected').length;
+
+        document.getElementById('totalReviews').textContent = total;
+        document.getElementById('pendingReviews').textContent = pending;
+        document.getElementById('approvedReviews').textContent = approved;
+        document.getElementById('rejectedReviews').textContent = rejected;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Load reviews
+    async function loadReviews(page = 1, status = '') {
+      try {
+        const container = document.getElementById('reviewsContainer');
+        container.innerHTML = '<div class="loading">Loading reviews...</div>';
+
+        let url = `${API_URL}/reviews/admin/all?page=${page}&limit=20`;
+        if (status) {
+          url += `&status=${status}`;
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.reviews.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📭</div>
+              <p>No reviews found</p>
+            </div>
+          `;
+          document.getElementById('paginationContainer').style.display = 'none';
+          return;
+        }
+
+        currentPage = parseInt(data.currentPage);
+        totalPages = data.totalPages;
+
+        container.innerHTML = `
+          <div class="reviews-grid">
+            ${data.reviews.map(review => createReviewCard(review)).join('')}
+          </div>
+        `;
+
+        attachEventListeners();
+        updatePagination(data);
+
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        document.getElementById('reviewsContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <p>Error loading reviews</p>
+          </div>
+        `;
+      }
+    }
+
+    function createReviewCard(review) {
+      const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+      const date = new Date(review.createdAt).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+
+      return `
+        <div class="review-card">
+          <div class="review-card-header">
+            <div class="review-customer">
+              <div class="review-customer-name">${escapeHtml(review.name)}</div>
+              <div class="review-customer-email">${escapeHtml(review.email)}</div>
+            </div>
+            <div class="review-rating">
+              <div class="rating-stars-large">${stars}</div>
+              <span class="rating-number">${review.rating}</span>
+            </div>
+          </div>
+
+          <div class="review-meta">
+            <span class="review-service-tag">
+              🚗 ${formatServiceType(review.serviceType)}
+            </span>
+            <span class="review-date-tag">
+              📅 ${date}
+            </span>
+          </div>
+
+          <div class="review-comment-box">
+            <div class="review-comment-text">${escapeHtml(review.comment)}</div>
+          </div>
+
+          <div class="review-status-row">
+            <span class="status-badge ${review.status}">
+              ${review.status === 'pending' ? '⏳' : review.status === 'approved' ? '✅' : '❌'}
+              ${review.status}
+            </span>
+            ${review.featured ? '<span class="featured-badge-large">⭐ Featured</span>' : ''}
+          </div>
+
+          <div class="review-actions">
+            ${review.status !== 'approved' ? `
+              <button class="btn-action btn-approve" data-action="approve" data-id="${review._id}">
+                ✓ Approve
+              </button>
+            ` : ''}
+            ${review.status !== 'rejected' ? `
+              <button class="btn-action btn-reject" data-action="reject" data-id="${review._id}">
+                ✗ Reject
+              </button>
+            ` : ''}
+            ${review.status === 'approved' ? `
+              <button class="btn-action ${review.featured ? 'btn-unfeature' : 'btn-feature'}" data-action="feature" data-id="${review._id}" data-featured="${review.featured}">
+                ${review.featured ? '★ Unfeature' : '☆ Feature'}
+              </button>
+            ` : ''}
+            <button class="btn-action btn-delete" data-action="delete" data-id="${review._id}">
+              🗑 Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachEventListeners() {
+      document.querySelectorAll('.btn-action').forEach(button => {
+        button.addEventListener('click', async function(e) {
+          e.preventDefault();
+          const action = this.dataset.action;
+          const id = this.dataset.id;
+
+          switch(action) {
+            case 'approve':
+              await approveReview(id);
+              break;
+            case 'reject':
+              await rejectReview(id);
+              break;
+            case 'feature':
+              const isFeatured = this.dataset.featured === 'true';
+              await toggleFeature(id, isFeatured);
+              break;
+            case 'delete':
+              await deleteReview(id);
+              break;
+          }
+        });
+      });
+    }
+
+    function updatePagination(data) {
+      const container = document.getElementById('paginationContainer');
+      const info = document.getElementById('paginationInfo');
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+
+      const start = ((currentPage - 1) * 20) + 1;
+      const end = Math.min(currentPage * 20, data.totalReviews);
+
+      info.textContent = `Showing ${start}-${end} of ${data.totalReviews} reviews`;
+
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === totalPages;
+
+      container.style.display = 'flex';
+    }
+
+    async function approveReview(id) {
+      if (!confirm('Approve this review?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/reviews/admin/${id}/approve`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          alert('Review approved successfully!');
+          await loadReviews(currentPage, currentStatus);
+          await loadStats();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message || 'Failed to approve review'}`);
+        }
+      } catch (error) {
+        console.error('Error approving review:', error);
+        alert('Error approving review.');
+      }
+    }
+
+    async function rejectReview(id) {
+      if (!confirm('Reject this review?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/reviews/admin/${id}/reject`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          alert('Review rejected successfully!');
+          await loadReviews(currentPage, currentStatus);
+          await loadStats();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message || 'Failed to reject review'}`);
+        }
+      } catch (error) {
+        console.error('Error rejecting review:', error);
+        alert('Error rejecting review.');
+      }
+    }
+
+    async function toggleFeature(id, currentStatus) {
+      try {
+        const response = await fetch(`${API_URL}/reviews/admin/${id}/feature`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          alert(`Review ${currentStatus ? 'unfeatured' : 'featured'} successfully!`);
+          await loadReviews(currentPage, currentStatus);
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message || 'Failed to update review'}`);
+        }
+      } catch (error) {
+        console.error('Error toggling feature:', error);
+        alert('Error updating review.');
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/reviews/admin/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          alert('Review deleted successfully!');
+          await loadReviews(currentPage, currentStatus);
+          await loadStats();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message || 'Failed to delete review'}`);
+        }
+      } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('Error deleting review.');
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatServiceType(type) {
+      const types = {
+        'wheelchair': 'Wheelchair',
+        'ambulance': 'Ambulance',
+        'standard': 'Standard',
+        'medication-delivery': 'Medication',
+        'other': 'Other'
+      };
+      return types[type] || type;
+    }
+
+    function logout() {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      window.location.href = '/admin/login';
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      currentStatus = this.value;
+      currentPage = 1;
+      loadReviews(currentPage, currentStatus);
+    });
+
+    document.getElementById('prevPageBtn').addEventListener('click', () => {
+      if (currentPage > 1) {
+        loadReviews(currentPage - 1, currentStatus);
+      }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        loadReviews(currentPage + 1, currentStatus);
+      }
+    });
+
+    if (checkAuth()) {
+      loadAdminInfo();
+      loadStats();
+      loadReviews();
+    }
+  </script>
+
+  <style is:global>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #F3F4F6;
+      color: #111827;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(180deg, #1E40AF 0%, #1E3A8A 100%);
+      color: white;
+      padding: 24px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .sidebar-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 16px;
+    }
+
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .admin-avatar {
+      width: 40px;
+      height: 40px;
+      background: #3B82F6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .admin-details {
+      flex: 1;
+    }
+
+    .admin-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .admin-role {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .nav-menu {
+      list-style: none;
+    }
+
+    .nav-item {
+      margin-bottom: 8px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: rgba(239, 68, 68, 0.2);
+      color: white;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: #6B7280;
+      font-size: 14px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-icon.blue {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+
+    .stat-icon.green {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .stat-icon.yellow {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .stat-icon.red {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 20px 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 24px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+    }
+
+    .filter-select {
+      padding: 10px 16px;
+      border: 2px solid #E5E7EB;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #1E40AF;
+    }
+
+    /* Reviews Grid */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .review-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .review-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      transform: translateY(-4px);
+      border-color: #E5E7EB;
+    }
+
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #F3F4F6;
+    }
+
+    .review-customer {
+      flex: 1;
+    }
+
+    .review-customer-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .review-customer-email {
+      font-size: 13px;
+      color: #6B7280;
+    }
+
+    .review-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rating-stars-large {
+      color: #F59E0B;
+      font-size: 20px;
+      letter-spacing: 2px;
+    }
+
+    .rating-number {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .review-meta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .review-service-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #EEF2FF;
+      color: #4338CA;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .review-date-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #F3F4F6;
+      color: #374151;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .review-comment-box {
+      background: #F9FAFB;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border-left: 4px solid #3B82F6;
+    }
+
+    .review-comment-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #374151;
+    }
+
+    .review-status-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.pending {
+      background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+      color: #92400E;
+      border: 2px solid #F59E0B;
+    }
+
+    .status-badge.approved {
+      background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+      color: #065F46;
+      border: 2px solid #10B981;
+    }
+
+    .status-badge.rejected {
+      background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+      color: #991B1B;
+      border: 2px solid #EF4444;
+    }
+
+    .featured-badge-large {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .review-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .btn-action {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-approve {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: white;
+    }
+
+    .btn-approve:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    .btn-reject {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: white;
+    }
+
+    .btn-reject:hover {
+      background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    }
+
+    .btn-feature {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+    }
+
+    .btn-feature:hover {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    }
+
+    .btn-unfeature {
+      background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+      color: white;
+    }
+
+    .btn-unfeature:hover {
+     background: linear-gradient(135deg, #4B5563 0%, #374151 100%);
+    }
+
+    .btn-delete {
+      background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+      color: white;
+      grid-column: 1 / -1;
+    }
+
+    .btn-delete:hover {
+      background: linear-gradient(135deg, #4B5563 0%, #374151 100%);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .empty-state {
+      padding: 64px 24px;
+      text-align: center;
+      color: #6B7280;
+      background: white;
+      border-radius: 16px;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .loading {
+      padding: 64px 24px;
+      text-align: center;
+      color: #6B7280;
+      background: white;
+      border-radius: 16px;
+    }
+
+    /* Pagination */
+    .pagination {
+      background: white;
+      padding: 20px 24px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-page {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-page:hover:not(:disabled) {
+      background: #1E40AF;
+      color: white;
+      border-color: #1E40AF;
+      transform: translateY(-2px);
+    }
+
+    .btn-page:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .reviews-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .reviews-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</body>
+</html>

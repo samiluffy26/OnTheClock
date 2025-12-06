@@ -15,8 +15,39 @@ export async function POST({ request }) {
       });
     }
     
+    // Si no viene la distancia, calcularla
+    let distance = data.distance;
+    if (!distance) {
+      // Calcular distancia usando Google Maps
+      const distanceResponse = await fetch(`${new URL(request.url).origin}/api/calculate-distance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origin: data.pickupLocation,
+          destination: data.dropoffLocation
+        })
+      });
+      
+      const distanceData = await distanceResponse.json();
+      
+      if (distanceData.success) {
+        distance = distanceData.distance;
+      } else {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Could not calculate distance'
+        }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+    
     // Calcular tarifa
-    const fareDetails = calculateFare(data);
+    const fareDetails = calculateFare({
+      ...data,
+      distance: distance
+    });
     
     return new Response(JSON.stringify({
       success: true,
