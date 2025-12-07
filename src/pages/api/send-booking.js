@@ -55,7 +55,7 @@ export async function POST({ request }) {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Nueva Solicitud de Viaje - Life Ride</h1>
+            <h1>Nueva Solicitud de Viaje - On the Clock Transportation</h1>
           </div>
           
           <div class="section">
@@ -213,7 +213,7 @@ export async function POST({ request }) {
         <div class="container">
           <div class="header">
             <h1>¡Solicitud Recibida!</h1>
-            <p>Gracias por elegir Life Ride</p>
+            <p>Gracias por elegir On the Clock Transportation</p>
           </div>
           
           <div class="section">
@@ -259,7 +259,7 @@ export async function POST({ request }) {
     await transporter.sendMail({
       from: EMAIL_CONFIG.auth.user,
       to: bookingData.passengerEmail,
-      subject: 'Confirmación de Solicitud - Life Ride',
+      subject: 'Confirmación de Solicitud - On the Clock Transportation',
       html: customerEmailHTML
     });
     

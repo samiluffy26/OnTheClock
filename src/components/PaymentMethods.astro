@@ -1,0 +1,630 @@
+---
+---
+
+<div class="payment-methods-trigger">
+  <button class="payment-button" id="openPaymentModal">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M3 4C3 3.44772 3.44772 3 4 3H16C16.5523 3 17 3.44772 17 4V6H3V4Z" fill="currentColor"/>
+      <path d="M3 8H17V16C17 16.5523 16.5523 17 16 17H4C3.44772 17 3 16.5523 3 16V8Z" fill="currentColor"/>
+      <circle cx="13" cy="12.5" r="1" fill="white"/>
+    </svg>
+    <span>Payment Methods</span>
+  </button>
+</div>
+
+<div class="payment-modal" id="paymentModal">
+  <div class="payment-modal-overlay" id="paymentOverlay"></div>
+  <div class="payment-modal-content">
+    <button class="payment-close" id="closePaymentModal">&times;</button>
+    
+    <div class="payment-header">
+      <h3>Accepted Payment Methods</h3>
+      <p>Scan QR codes to pay quickly and securely</p>
+    </div>
+
+    <div class="payment-tabs">
+      <button class="payment-tab active" data-tab="cashapp">
+        <div class="tab-icon">💵</div>
+        <div class="tab-label">Cash App</div>
+      </button>
+      <button class="payment-tab" data-tab="zelle">
+        <div class="tab-icon">💜</div>
+        <div class="tab-label">Zelle</div>
+      </button>
+      <button class="payment-tab" data-tab="other">
+        <div class="tab-icon">💳</div>
+        <div class="tab-label">Other</div>
+      </button>
+    </div>
+
+    <div class="payment-content">
+      <!-- Cash App -->
+      <div class="payment-tab-content active" id="cashapp-content">
+        <div class="qr-container">
+          <div class="qr-header">
+            <div class="service-logo cashapp">
+              <span>$</span>
+            </div>
+            <div class="service-info">
+              <h4>Cash App</h4>
+              <p class="cashtag">$ontheclocktrans</p>
+            </div>
+          </div>
+          
+          <div class="qr-code-wrapper">
+            <img src="/qr-cashapp.png" alt="Cash App QR Code" class="qr-code">
+          </div>
+          
+          <div class="payment-instructions">
+            <div class="instruction-item">
+              <span class="step-number">1</span>
+              <span class="step-text">Open Cash App</span>
+            </div>
+            <div class="instruction-item">
+              <span class="step-number">2</span>
+              <span class="step-text">Scan this QR code</span>
+            </div>
+            <div class="instruction-item">
+              <span class="step-number">3</span>
+              <span class="step-text">Enter amount and confirm</span>
+            </div>
+          </div>
+
+          <div class="alternative-method">
+            <p>Or search for: <strong>$ontheclocktrans</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zelle -->
+      <div class="payment-tab-content" id="zelle-content">
+        <div class="qr-container">
+          <div class="qr-header">
+            <div class="service-logo zelle">
+              <span>Z</span>
+            </div>
+            <div class="service-info">
+              <h4>Zelle</h4>
+              <p class="cashtag">On The Clock Transportation LLC</p>
+            </div>
+          </div>
+          
+          <div class="qr-code-wrapper">
+            <img src="/qr-zelle.png" alt="Zelle QR Code" class="qr-code">
+          </div>
+          
+          <div class="payment-instructions">
+            <div class="instruction-item">
+              <span class="step-number">1</span>
+              <span class="step-text">Open your banking app</span>
+            </div>
+            <div class="instruction-item">
+              <span class="step-number">2</span>
+              <span class="step-text">Go to Zelle</span>
+            </div>
+            <div class="instruction-item">
+              <span class="step-number">3</span>
+              <span class="step-text">Scan QR or use email</span>
+            </div>
+          </div>
+
+          <div class="alternative-method">
+            <p>Or send to: <strong>daviddiaz1971@gmail.com</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Methods -->
+      <div class="payment-tab-content" id="other-content">
+        <div class="other-methods">
+          <div class="method-card">
+            <div class="method-icon">💳</div>
+            <h4>Credit/Debit Card</h4>
+            <p>We accept all major credit and debit cards at the time of service</p>
+          </div>
+          
+          <div class="method-card">
+            <div class="method-icon">💵</div>
+            <h4>Cash</h4>
+            <p>Cash payments accepted directly with the driver</p>
+          </div>
+          
+          <div class="method-card">
+            <div class="method-icon">📞</div>
+            <h4>Invoice</h4>
+            <p>Corporate accounts can request invoicing</p>
+          </div>
+
+          <div class="contact-payment">
+            <p>For payment questions, call us at:</p>
+            <a href="tel:5512250080" class="payment-phone">(551) 225-0080</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Trigger Button */
+.payment-methods-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}
+
+.payment-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s ease;
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+}
+
+.payment-button svg {
+  flex-shrink: 0;
+}
+
+/* Modal */
+.payment-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+}
+
+.payment-modal.active {
+  display: block;
+}
+
+.payment-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.payment-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.payment-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #F3F4F6;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 24px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.payment-close:hover {
+  background: #E5E7EB;
+  color: #111827;
+  transform: rotate(90deg);
+}
+
+.payment-header {
+  padding: 32px 24px 24px;
+  text-align: center;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.payment-header h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.payment-header p {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+/* Tabs */
+.payment-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 2px solid #E5E7EB;
+  background: #F9FAFB;
+}
+
+.payment-tab {
+  background: none;
+  border: none;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-bottom: 3px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.payment-tab:hover {
+  background: #F3F4F6;
+}
+
+.payment-tab.active {
+  border-bottom-color: #10B981;
+  background: white;
+}
+
+.tab-icon {
+  font-size: 24px;
+}
+
+.tab-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.payment-tab.active .tab-label {
+  color: #10B981;
+}
+
+/* Content */
+.payment-content {
+  padding: 24px;
+}
+
+.payment-tab-content {
+  display: none;
+}
+
+.payment-tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* QR Container */
+.qr-container {
+  text-align: center;
+}
+
+.qr-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.service-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+}
+
+.service-logo.cashapp {
+  background: linear-gradient(135deg, #00D64F 0%, #00C853 100%);
+}
+
+.service-logo.zelle {
+  background: linear-gradient(135deg, #6D1ED4 0%, #5A1AB0 100%);
+}
+
+.service-info {
+  text-align: left;
+}
+
+.service-info h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.cashtag {
+  font-size: 14px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.qr-code-wrapper {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  border: 2px solid #E5E7EB;
+  margin-bottom: 24px;
+  display: inline-block;
+}
+
+.qr-code {
+  width: 220px;
+  height: 220px;
+  display: block;
+}
+
+/* Instructions */
+.payment-instructions {
+  background: #F9FAFB;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.instruction-item:not(:last-child) {
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  background: #10B981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+  text-align: left;
+}
+
+.alternative-method {
+  background: #DBEAFE;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #3B82F6;
+}
+
+.alternative-method p {
+  font-size: 13px;
+  color: #1E40AF;
+  margin: 0;
+}
+
+.alternative-method strong {
+  font-weight: 700;
+}
+
+/* Other Methods */
+.other-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.method-card {
+  background: #F9FAFB;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.method-card:hover {
+  border-color: #10B981;
+  transform: translateY(-2px);
+}
+
+.method-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.method-card h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.method-card p {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.contact-payment {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.contact-payment p {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.payment-phone {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.payment-phone:hover {
+  transform: scale(1.05);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .payment-methods-trigger {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .payment-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .payment-button span {
+    display: none;
+  }
+
+  .payment-modal-content {
+    width: 95%;
+    max-height: 90vh;
+    border-radius: 20px;
+  }
+
+  .payment-header {
+    padding: 24px 20px 20px;
+  }
+
+  .payment-header h3 {
+    font-size: 20px;
+  }
+
+  .payment-content {
+    padding: 20px 16px;
+  }
+
+  .qr-code-wrapper {
+    padding: 16px;
+  }
+
+  .qr-code {
+    width: 200px;
+    height: 200px;
+  }
+
+  .payment-tabs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .tab-icon {
+    font-size: 20px;
+  }
+
+  .tab-label {
+    font-size: 11px;
+  }
+}
+</style>
+
+<script>
+  const modal = document.getElementById('paymentModal');
+  const openBtn = document.getElementById('openPaymentModal');
+  const closeBtn = document.getElementById('closePaymentModal');
+  const overlay = document.getElementById('paymentOverlay');
+
+  function openModal() {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', closeModal);
+
+  // Tab switching
+  const tabs = document.querySelectorAll('.payment-tab');
+  const tabContents = document.querySelectorAll('.payment-tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      const targetTab = this.getAttribute('data-tab');
+      
+      // Remove active from all
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(tc => tc.classList.remove('active'));
+      
+      // Add active to clicked
+      this.classList.add('active');
+      document.getElementById(`${targetTab}-content`).classList.add('active');
+    });
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+</script>
