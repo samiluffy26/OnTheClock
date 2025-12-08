@@ -12,14 +12,64 @@ const app = express();
 // Conectar a MongoDB
 connectDB();
 
-// ⭐ CORS configurado correctamente
+// ⭐ CORS configurado correctamente (sustituir el bloque anterior)
 const allowedOrigins = [
   'http://localhost:4321',
   'http://localhost:3000',
-  'https://on-the-clock.vercel.app', // ⚠️ SIN barra final
-  'https://on-the-clock-git-main.vercel.app', // Preview deployments
-  'https://on-the-clock-git-*.vercel.app', // Otros preview
+  'https://on-the-clock.vercel.app' // dominio de producción
 ];
+
+// patrón para previews de Vercel (on-the-clock-git-xxxx.vercel.app)
+const vercelPreviewRegex = /^https:\/\/on-the-clock-git-[a-z0-9-]+\.vercel\.app$/i;
+
+// helper seguro: convierte un patrón con '*' a RegExp escapando puntos y demás
+function patternToRegex(pattern) {
+  // escapamos los caracteres especiales, luego reemplazamos \* por .*
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*');
+  return new RegExp(`^${escaped}$`, 'i');
+}
+
+// Si en el futuro quieres añadir patrones, agrégalos aquí (usa '*' si quieres)
+const allowedPatterns = [
+  // Ejemplo: 'https://mi-sitio-*.vercel.app'
+];
+
+const allowedPatternRegexes = allowedPatterns.map(patternToRegex);
+
+// CORS options
+const corsOptions = {
+  origin: function(origin, callback) {
+    // permitir requests sin origin (Postman, mobile apps, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // origen explícito en la lista
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // previews de Vercel para este proyecto
+    if (vercelPreviewRegex.test(origin)) {
+      return callback(null, true);
+    }
+
+    // patrones adicionales
+    for (const rx of allowedPatternRegexes) {
+      if (rx.test(origin)) return callback(null, true);
+    }
+
+    // si llega aquí: bloqueado
+    console.log('❌ CORS blocked origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+};
+
+app.use(cors(corsOptions));
+// asegurar manejo de preflight
+app.options('*', cors(corsOptions));
 
 app.use(cors({
   origin: function(origin, callback) {
