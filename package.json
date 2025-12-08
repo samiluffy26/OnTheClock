@@ -4,13 +4,10 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "server": "node server/server.js",
-    "server:dev": "nodemon server/server.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\""
+    "start": "node server/server.js",
+    "server:dev": "nodemon server/server.js"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.1",

@@ -1,7 +1,7 @@
 ---
 // NO uses fetchAPI aquí, solo define la variable
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
-const API_BASE = 'https://ontheclock-96ip.onrender.com';
+const API_BASE = '';  // Vacío = mismo servidor
 ---
 
 <section class="reviews-section" id="reviews">
@@ -869,7 +869,7 @@ const API_BASE = 'https://ontheclock-96ip.onrender.com';
 
 <script define:vars={{ API_BASE }}>
   // ✅ Astro inyecta API_BASE directamente en el script compilado
-  const API_URL = `${API_BASE}/api`;
+const API_URL = `${API_BASE}/api`;  // Quedará como '/api'
   
   console.log('🔗 API_BASE inyectado:', API_BASE);
   console.log('🔗 API_URL final:', API_URL);
