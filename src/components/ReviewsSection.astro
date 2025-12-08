@@ -1,5 +1,5 @@
 ---
-// En el frontmatter de ReviewsSection.astro
+// NO uses fetchAPI aquí, solo define la variable
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
 ---
@@ -868,11 +868,12 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
 </style>
 
 <script>
-   const API_BASE = window.API_BASE || 'https://ontheclock-96ip.onrender.com';
+   <script define:vars={{ API_BASE }}>
+  // ✅ SOLUCIÓN: Astro inyecta API_BASE directamente en el script compilado
   const API_URL = `${API_BASE}/api`;
   
-  console.log('🔗 Reviews section API_BASE:', API_BASE);
-  console.log('🔗 Reviews section API_URL:', API_URL);
+  console.log('🔗 API_BASE inyectado:', API_BASE);
+  console.log('🔗 API_URL final:', API_URL);
 
   let allReviews = [];
   let currentSlide = 0;
@@ -881,7 +882,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
   // Cargar estadísticas
   async function loadStats() {
     try {
-      console.log('📊 Loading stats from:', `${API_URL}/reviews/stats`);
+      console.log('📊 Fetching stats from:', `${API_URL}/reviews/stats`);
       const response = await fetch(`${API_URL}/reviews/stats`);
       
       if (!response.ok) {
@@ -895,9 +896,11 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       
       if (totalEl) totalEl.textContent = data.totalReviews;
       if (avgEl) avgEl.textContent = data.averageRating;
+      
+      console.log('✅ Stats loaded successfully');
     } catch (error) {
       console.error('❌ Error loading stats:', error);
-      console.error('Failed URL:', `${API_URL}/reviews/stats`);
+      console.error('URL intentada:', `${API_URL}/reviews/stats`);
     }
   }
 
@@ -909,7 +912,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       
       wrapper.innerHTML = '<div class="loading">Loading reviews...</div>';
       
-      console.log('📝 Loading reviews from:', `${API_URL}/reviews?page=1&limit=100`);
+      console.log('📝 Fetching reviews from:', `${API_URL}/reviews?page=1&limit=100`);
       const response = await fetch(`${API_URL}/reviews?page=1&limit=100`);
       
       if (!response.ok) {
@@ -917,6 +920,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       }
       
       const data = await response.json();
+      console.log('✅ Reviews loaded:', data.reviews.length);
       
       if (data.reviews.length === 0) {
         wrapper.innerHTML = '<div class="loading">No reviews yet. Be the first to share your experience!</div>';
@@ -928,10 +932,10 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       startAutoplay();
     } catch (error) {
       console.error('❌ Error loading reviews:', error);
-      console.error('Failed URL:', `${API_URL}/reviews?page=1&limit=100`);
+      console.error('URL intentada:', `${API_URL}/reviews?page=1&limit=100`);
       const wrapper = document.getElementById('testimonialWrapper');
       if (wrapper) {
-        wrapper.innerHTML = '<div class="loading">Error loading reviews. Please try again later.</div>';
+        wrapper.innerHTML = '<div class="loading">Error loading reviews. Please check console.</div>';
       }
     }
   }
@@ -1010,7 +1014,6 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       <div class="indicator-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>
     `).join('');
     
-    // Event listeners para indicadores
     document.querySelectorAll('.indicator-dot').forEach(dot => {
       dot.addEventListener('click', function() {
         const slideIndex = parseInt(this.getAttribute('data-slide') || '0');
@@ -1023,18 +1026,15 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
   function goToSlide(slideIndex) {
     currentSlide = slideIndex;
     
-    // Remover active de todos
     document.querySelectorAll('.testimonial-slide').forEach(slide => {
       slide.classList.remove('active');
     });
     
-    // Agregar active al nuevo
     const slides = document.querySelectorAll('.testimonial-slide');
     if (slides[currentSlide]) {
       slides[currentSlide].classList.add('active');
     }
     
-    // Actualizar indicadores
     document.querySelectorAll('.indicator-dot').forEach((dot, index) => {
       dot.classList.toggle('active', index === currentSlide);
     });
@@ -1043,7 +1043,6 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
     resetAutoplay();
   }
 
-  // Navegación
   function nextSlide() {
     if (currentSlide < allReviews.length - 1) {
       goToSlide(currentSlide + 1);
@@ -1056,7 +1055,6 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
     }
   }
 
-  // Actualizar botones de navegación
   function updateNavButtons() {
     const prevBtn = document.getElementById('carouselPrev');
     const nextBtn = document.getElementById('carouselNext');
@@ -1066,7 +1064,6 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
     nextBtn.disabled = currentSlide >= allReviews.length - 1;
   }
 
-  // Autoplay
   function startAutoplay() {
     autoplayInterval = setInterval(() => {
       if (currentSlide < allReviews.length - 1) {
@@ -1086,7 +1083,6 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
     clearInterval(autoplayInterval);
   }
 
-  // Funciones de utilidad
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -1264,14 +1260,13 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
   }
 
   // Event listeners para navegación
-  function setupNavigation() {
+ function setupNavigation() {
     const prevBtn = document.getElementById('carouselPrev');
     const nextBtn = document.getElementById('carouselNext');
     
     if (prevBtn) prevBtn.addEventListener('click', prevSlide);
     if (nextBtn) nextBtn.addEventListener('click', nextSlide);
 
-    // Touch/swipe support
     let touchStartX = 0;
     let touchEndX = 0;
     const wrapper = document.getElementById('testimonialWrapper');
@@ -1302,14 +1297,12 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       }
     }
 
-    // Pausar autoplay cuando el mouse está sobre el carousel
     const testimonialCarousel = document.querySelector('.testimonial-carousel');
     if (testimonialCarousel) {
       testimonialCarousel.addEventListener('mouseenter', stopAutoplay);
       testimonialCarousel.addEventListener('mouseleave', startAutoplay);
     }
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       const modal = document.getElementById('reviewModal');
       if (modal?.classList.contains('active')) return;
@@ -1322,11 +1315,18 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
     });
   }
 
-  // Inicializar todo cuando el DOM esté listo
-  document.addEventListener('DOMContentLoaded', () => {
+  // Inicializar
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadAllReviews();
+      setupModal();
+      setupNavigation();
+    });
+  } else {
     loadStats();
     loadAllReviews();
     setupModal();
     setupNavigation();
-  });
+  }
 </script>
