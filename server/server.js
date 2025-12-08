@@ -1,16 +1,12 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import reviewsRoutes from './routes/reviews.js';
+import { handler as ssrHandler } from '../dist/server/entry.mjs';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -27,7 +23,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
+// API Routes ANTES del handler de Astro
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewsRoutes);
 
@@ -40,13 +36,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Servir archivos estáticos de Astro
-app.use(express.static(path.join(__dirname, '../dist')));
+// Servir archivos estáticos del cliente de Astro
+app.use(express.static('dist/client'));
 
-// Todas las demás rutas sirven index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
+// Handler de Astro SSR para todas las demás rutas
+app.use(ssrHandler);
 
 // Error handler
 app.use((err, req, res, next) => {

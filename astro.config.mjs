@@ -2,9 +2,9 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 
 export default defineConfig({
-  output: 'static',
+  output: 'server',
   adapter: node({
-    mode: 'standalone'
+    mode: 'middleware'
   }),
-  site: 'https://your-app.onrender.com' // Actualizarás esto después
+  site: 'https://ontheclock-96ip.onrender.com' 
 });
