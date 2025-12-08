@@ -1,0 +1,15 @@
+services:
+  # Backend API
+  - type: web
+    name: life-ride-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # Lo configurarás manualmente en Render
+      - key: JWT_SECRET
+        sync: false
+    healthCheckPath: /health
