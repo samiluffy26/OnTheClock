@@ -871,9 +871,9 @@ const reviews = await fetchAPI('/api/reviews');
 </style>
 
 <script>
-  const API_URL = import.meta.env.PUBLIC_API_URL 
-  ? `${import.meta.env.PUBLIC_API_URL}/api`
-  : 'http://localhost:3001/api';
+  // Version 2.0 - Updated API URL
+  const API_URL = 'https://life-ride-backend.onrender.com/api';
+  
   let allReviews = [];
   let currentSlide = 0;
   let autoplayInterval;
