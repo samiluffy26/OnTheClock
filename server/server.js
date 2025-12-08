@@ -69,10 +69,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ✅ IMPORTANTE: NO uses app.options('*', ...) - CORS ya lo maneja automáticamente
-// Esta línea causaba el error en Render, así que la eliminamos completamente
+// ✅ IMPORTANTE: No agregues app.options('*', ...) 
+// CORS con credentials: true ya maneja OPTIONS automáticamente
 
-// Error handler
+// Error handler (siguiente sección)
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
