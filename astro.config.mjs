@@ -1,10 +1,12 @@
 import { defineConfig } from 'astro/config';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel/static';
 
 export default defineConfig({
-  site: 'https://yoursite.com',
-  output: 'server',
-  adapter: node({
-    mode: 'standalone'
-  })
+  output: 'static',
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true
+    }
+  }),
+  site: 'https://on-the-clock.vercel.app' // Actualiza con tu URL de Vercel
 });
