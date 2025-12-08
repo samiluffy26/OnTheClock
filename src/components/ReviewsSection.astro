@@ -1,5 +1,10 @@
 ---
 // ReviewsSection.astro - Componente corregido para Astro
+
+import { fetchAPI } from '../config/api.js';
+
+// Usar en server-side
+const reviews = await fetchAPI('/api/reviews');
 ---
 
 <section class="reviews-section" id="reviews">
@@ -866,7 +871,9 @@
 </style>
 
 <script>
-  const API_URL = 'http://localhost:3001/api';
+  const API_URL = import.meta.env.PUBLIC_API_URL 
+  ? `${import.meta.env.PUBLIC_API_URL}/api`
+  : 'http://localhost:3001/api';
   let allReviews = [];
   let currentSlide = 0;
   let autoplayInterval;

@@ -126,7 +126,9 @@
   </div>
 
   <script>
-    const API_URL = 'http://localhost:3001/api';
+    const API_URL = import.meta.env.PUBLIC_API_URL 
+  ? `${import.meta.env.PUBLIC_API_URL}/api`
+  : 'http://localhost:3001/api';
     let currentPage = 1;
     let currentStatus = '';
     let totalPages = 1;
