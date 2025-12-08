@@ -1,6 +1,5 @@
 ---
-import { fetchAPI } from '../config/api.js';
-const reviews = await fetchAPI('/reviews'); // si en server quieres cargar algo
+// En el frontmatter de ReviewsSection.astro
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
 ---
@@ -869,20 +868,26 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
 </style>
 
 <script>
-  window.API_BASE = {JSON.stringify(API_BASE)};
-  const API_URL = (window.API_BASE ? window.API_BASE.replace(/\/+$/,'') + '/api' : 'http://localhost:3001/api');
-  window.API_URL = API_URL;
-  console.log('Reviews section API_URL:', API_URL);
+   const API_BASE = window.API_BASE || 'https://ontheclock-96ip.onrender.com';
+  const API_URL = `${API_BASE}/api`;
+  
+  console.log('🔗 Reviews section API_BASE:', API_BASE);
+  console.log('🔗 Reviews section API_URL:', API_URL);
 
   let allReviews = [];
   let currentSlide = 0;
   let autoplayInterval;
 
-
   // Cargar estadísticas
   async function loadStats() {
     try {
+      console.log('📊 Loading stats from:', `${API_URL}/reviews/stats`);
       const response = await fetch(`${API_URL}/reviews/stats`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
       const totalEl = document.getElementById('totalReviews');
@@ -891,7 +896,8 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       if (totalEl) totalEl.textContent = data.totalReviews;
       if (avgEl) avgEl.textContent = data.averageRating;
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('❌ Error loading stats:', error);
+      console.error('Failed URL:', `${API_URL}/reviews/stats`);
     }
   }
 
@@ -903,7 +909,13 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       
       wrapper.innerHTML = '<div class="loading">Loading reviews...</div>';
       
+      console.log('📝 Loading reviews from:', `${API_URL}/reviews?page=1&limit=100`);
       const response = await fetch(`${API_URL}/reviews?page=1&limit=100`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
       if (data.reviews.length === 0) {
@@ -915,7 +927,8 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
       renderTestimonials();
       startAutoplay();
     } catch (error) {
-      console.error('Error loading reviews:', error);
+      console.error('❌ Error loading reviews:', error);
+      console.error('Failed URL:', `${API_URL}/reviews?page=1&limit=100`);
       const wrapper = document.getElementById('testimonialWrapper');
       if (wrapper) {
         wrapper.innerHTML = '<div class="loading">Error loading reviews. Please try again later.</div>';
