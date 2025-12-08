@@ -1,10 +1,8 @@
 ---
-// ReviewsSection.astro - Componente corregido para Astro
-
 import { fetchAPI } from '../config/api.js';
-
-// Usar en server-side
-const reviews = await fetchAPI('/api/reviews');
+const reviews = await fetchAPI('/reviews'); // si en server quieres cargar algo
+const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
+const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
 ---
 
 <section class="reviews-section" id="reviews">
@@ -871,12 +869,15 @@ const reviews = await fetchAPI('/api/reviews');
 </style>
 
 <script>
-  // Version 2.0 - Updated API URL
-  const API_URL = 'https://life-ride-backend.onrender.com/api';
-  
+  window.API_BASE = {JSON.stringify(API_BASE)};
+  const API_URL = (window.API_BASE ? window.API_BASE.replace(/\/+$/,'') + '/api' : 'http://localhost:3001/api');
+  window.API_URL = API_URL;
+  console.log('Reviews section API_URL:', API_URL);
+
   let allReviews = [];
   let currentSlide = 0;
   let autoplayInterval;
+
 
   // Cargar estadísticas
   async function loadStats() {

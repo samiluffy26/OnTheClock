@@ -1,5 +1,7 @@
 ---
-// src/pages/admin/dashboard.astro
+// frontmatter: inyectar variable del build en el HTML cliente
+const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
+const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
 ---
 
 <!DOCTYPE html>
@@ -126,13 +128,16 @@
   </div>
 
   <script>
-    const API_URL = import.meta.env.PUBLIC_API_URL 
-  ? `${import.meta.env.PUBLIC_API_URL}/api`
-  : 'http://localhost:3001/api';
-    let currentPage = 1;
-    let currentStatus = '';
-    let totalPages = 1;
-    let adminToken = '';
+      window.API_BASE = {JSON.stringify(API_BASE)};
+  const API_URL = (window.API_BASE ? window.API_BASE.replace(/\/+$/,'') + '/api' : 'http://localhost:3001/api');
+  window.API_URL = API_URL;
+  console.log('Admin frontend API_URL:', API_URL);
+
+  let currentPage = 1;
+  let currentStatus = '';
+  let totalPages = 1;
+  let adminToken = '';
+
 
     // Check authentication
     function checkAuth() {
