@@ -1,7 +1,7 @@
 ---
 // NO uses fetchAPI aquí, solo define la variable
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
-const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
+const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || 'https://ontheclock-96ip.onrender.com';
 ---
 
 <section class="reviews-section" id="reviews">
@@ -1000,14 +1000,15 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
   }
 
   // Crear indicadores
-  function createIndicators() {
-    const indicators = document.getElementById('carouselIndicators');
-    if (!indicators) return;
-    
-    if (allReviews.length <= 1) {
-      indicators.innerHTML = '';
-      return;
-}
+function createIndicators() {
+  const indicators = document.getElementById('carouselIndicators');
+  if (!indicators) return;
+  
+  if (allReviews.length <= 1) {
+    indicators.innerHTML = '';
+    return; 
+  }
+
 indicators.innerHTML = allReviews.map((_, i) => `
   <div class="indicator-dot ${i === 0 ? 'active' : ''}" data-slide="${i}"></div>
 `).join('');

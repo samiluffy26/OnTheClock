@@ -8,5 +8,5 @@ export default defineConfig({
       enabled: true
     }
   }),
-  site: 'https://on-the-clock.vercel.app' // Actualiza con tu URL de Vercel
+  site: 'https://on-the-clock.vercel.app' 
 });
