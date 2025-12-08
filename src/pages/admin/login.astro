@@ -1,7 +1,7 @@
 ---
 // frontmatter: inyectar variable del build en el HTML cliente
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
-const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
+const API_BASE = 'https://ontheclock-96ip.onrender.com';
 ---
 
 <!DOCTYPE html>
@@ -237,7 +237,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
 
   <script>
   // Inyectado desde server-side (Astro). API_BASE no incluye /final slash.
-  window.API_BASE = {JSON.stringify(API_BASE)};
+ window.API_BASE = API_BASE;
   // Define API_URL listo para usar por el código cliente (con /api)
   const API_URL = (window.API_BASE ? window.API_BASE.replace(/\/+$/,'') + '/api' : 'http://localhost:3001/api');
   // exponemos para debugging
@@ -251,7 +251,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
 
   function showAlert(message, type = 'error') {
     alert.textContent = message;
-    alert.className = alert ${type} active;
+    alert.className = `alert ${type} active`;  // ✅ CORRECTO
     setTimeout(() => {
       alert.classList.remove('active');
     }, 5000);

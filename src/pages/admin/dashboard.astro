@@ -1,7 +1,7 @@
 ---
 // frontmatter: inyectar variable del build en el HTML cliente
 const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
-const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://ontheclock-96ip.onrender.com');
+const API_BASE = 'https://ontheclock-96ip.onrender.com';
 ---
 
 <!DOCTYPE html>
@@ -128,7 +128,7 @@ const API_BASE = PUBLIC_API_URL.replace(/\/+$/,'') || (import.meta.env.DEV ? 'ht
   </div>
 
   <script>
-      window.API_BASE = {JSON.stringify(API_BASE)};
+     window.API_BASE = API_BASE;
   const API_URL = (window.API_BASE ? window.API_BASE.replace(/\/+$/,'') + '/api' : 'http://localhost:3001/api');
   window.API_URL = API_URL;
   console.log('Admin frontend API_URL:', API_URL);
