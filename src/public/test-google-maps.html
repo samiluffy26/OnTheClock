@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Google Maps</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    #map { height: 400px; width: 100%; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Google Maps API Test</h1>
+  
+  <div id="status"></div>
+  
+  <h3>Test 1: API Key</h3>
+  <div id="apiKeyStatus" class="status info">Checking...</div>
+  
+  <h3>Test 2: Google Maps Loaded</h3>
+  <div id="loadStatus" class="status info">Checking...</div>
+  
+  <h3>Test 3: Places API</h3>
+  <div id="placesStatus" class="status info">Checking...</div>
+  
+  <h3>Test 4: Distance Matrix API</h3>
+  <div id="distanceStatus" class="status info">Checking...</div>
+  
+  <div id="map"></div>
+  
+  <script>
+    const API_KEY = 'TU_API_KEY_AQUI'; // ← REEMPLAZA CON TU API KEY
+    
+    // Test 1: API Key
+    if (API_KEY && API_KEY !== 'TU_API_KEY_AQUI') {
+      document.getElementById('apiKeyStatus').className = 'status success';
+      document.getElementById('apiKeyStatus').textContent = '✅ API Key present';
+    } else {
+      document.getElementById('apiKeyStatus').className = 'status error';
+      document.getElementById('apiKeyStatus').textContent = '❌ API Key missing - Replace it above';
+    }
+    
+    // Load Google Maps
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=initTest`;
+    script.async = true;
+    script.onerror = () => {
+      document.getElementById('loadStatus').className = 'status error';
+      document.getElementById('loadStatus').textContent = '❌ Failed to load Google Maps - Check API Key and network';
+    };
+    document.head.appendChild(script);
+    
+    window.initTest = function() {
+      // Test 2: Google Maps
+      if (window.google && window.google.maps) {
+        document.getElementById('loadStatus').className = 'status success';
+        document.getElementById('loadStatus').textContent = '✅ Google Maps loaded successfully';
+        
+        // Test 3: Places API
+        if (window.google.maps.places) {
+          document.getElementById('placesStatus').className = 'status success';
+          document.getElementById('placesStatus').textContent = '✅ Places API available';
+        } else {
+          document.getElementById('placesStatus').className = 'status error';
+          document.getElementById('placesStatus').textContent = '❌ Places API not available';
+        }
+        
+        // Test 4: Distance Matrix
+        try {
+          const service = new google.maps.DistanceMatrixService();
+          service.getDistanceMatrix({
+            origins: ['Miami, FL'],
+            destinations: ['Orlando, FL'],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL,
+          }, (response, status) => {
+            if (status === 'OK') {
+              document.getElementById('distanceStatus').className = 'status success';
+              document.getElementById('distanceStatus').textContent = '✅ Distance Matrix API working - Distance: ' + response.rows[0].elements[0].distance.text;
+            } else {
+              document.getElementById('distanceStatus').className = 'status error';
+              document.getElementById('distanceStatus').textContent = '❌ Distance Matrix API error: ' + status;
+            }
+          });
+        } catch (error) {
+          document.getElementById('distanceStatus').className = 'status error';
+          document.getElementById('distanceStatus').textContent = '❌ Distance Matrix error: ' + error.message;
+        }
+        
+        // Show map
+        new google.maps.Map(document.getElementById('map'), {
+          center: { lat: 25.7617, lng: -80.1918 }, // Miami
+          zoom: 10
+        });
+      } else {
+        document.getElementById('loadStatus').className = 'status error';
+        document.getElementById('loadStatus').textContent = '❌ Google Maps object not available';
+      }
+    };
+  </script>
+</body>
+</html>

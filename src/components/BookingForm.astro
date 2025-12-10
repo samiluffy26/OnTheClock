@@ -11,11 +11,17 @@
       
       <form id="fareEstimateForm">
         <div class="form-group">
-          <input type="text" id="pickupLocation" name="pickupLocation" placeholder="Pick-Up Location" required>
+          <div class="autocomplete-wrapper">
+            <input type="text" id="pickupLocation" name="pickupLocation" placeholder="Pick-Up Location" required autocomplete="off">
+            <div id="pickupLocation-suggestions" class="autocomplete-suggestions"></div>
+          </div>
         </div>
-        
+
         <div class="form-group">
-          <input type="text" id="dropoffLocation" name="dropoffLocation" placeholder="Drop-Off Location" required>
+          <div class="autocomplete-wrapper">
+            <input type="text" id="dropoffLocation" name="dropoffLocation" placeholder="Drop-Off Location" required autocomplete="off">
+            <div id="dropoffLocation-suggestions" class="autocomplete-suggestions"></div>
+          </div>
         </div>
         
         <div class="form-row">
@@ -59,6 +65,7 @@
       <div id="fareResult">
         <div class="trip-summary">
           <p id="tripRoute"></p>
+          <p id="tripDistance" style="color: #666; font-size: 14px; margin-top: 5px;"></p>
         </div>
         
         <div class="fare-options">
@@ -272,47 +279,50 @@
             <div class="checkbox-group">
               <input type="checkbox" name="assistOrigin" id="assistOrigin">
               <label for="assistOrigin">Provide Assist - Origin Address</label>
-</div>
-<div class="checkbox-group">
-<input type="checkbox" name="assistDestination" id="assistDestination">
-<label for="assistDestination">Provide Assist - Destination Address</label>
-</div>
-</div>
-</div>
-    <!-- Notes -->
-    <div class="form-section">
-      <h3>Notes</h3>
-      <p class="section-description">If there are any special requirements, pickup instructions and/or information we need please let us know here.</p>
-      
-      <div class="form-group">
-        <textarea name="notes" id="notes" rows="5" placeholder="Trip Notes"></textarea>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" name="assistDestination" id="assistDestination">
+              <label for="assistDestination">Provide Assist - Destination Address</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes -->
+        <div class="form-section">
+          <h3>Notes</h3>
+          <p class="section-description">If there are any special requirements, pickup instructions and/or information we need please let us know here.</p>
+          
+          <div class="form-group">
+            <textarea name="notes" id="notes" rows="5" placeholder="Trip Notes"></textarea>
+          </div>
+        </div>
+        
+        <!-- Policy Agreement -->
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="agreePolicy" name="agreePolicy" required>
+          <label for="agreePolicy">You have read and agree to our <a href="#cancellation" target="_blank">cancellation policy</a>.</label>
+        </div>
+        
+        <button type="submit" class="btn-submit" id="submitBooking">Continue</button>
+      </form>
+    </div>
+
+    <!-- PASO 4: Confirmación -->
+    <div id="step4" class="booking-step">
+      <div class="confirmation-content">
+        <div class="success-icon">✓</div>
+        <h2>Booking Request Submitted!</h2>
+        <p>Thank you for choosing On the Clock Transportation. We've received your request and will contact you shortly to confirm all details.</p>
+        <p>A confirmation email has been sent to <strong id="confirmEmail"></strong></p>
+        
+        <div class="confirmation-details">
+          <h3>Booking Summary</h3>
+          <div id="bookingSummary"></div>
+        </div>
+        
+        <button class="btn-secondary" id="closeConfirmation">Close</button>
       </div>
     </div>
-    
-    <!-- Policy Agreement -->
-    <div class="form-group checkbox-group">
-      <input type="checkbox" id="agreePolicy" name="agreePolicy" required>
-      <label for="agreePolicy">You have read and agree to our <a href="#cancellation" target="_blank">cancellation policy</a>.</label>
-    </div>
-    
-    <button type="submit" class="btn-submit" id="submitBooking">Continue</button>
-  </form>
-</div>
-
-<!-- PASO 4: Confirmación -->
-<div id="step4" class="booking-step">
-  <div class="confirmation-content">
-    <div class="success-icon">✓</div>
-    <h2>Booking Request Submitted!</h2>
-    <p>Thank you for choosing On the Clock Transportation. We've received your request and will contact you shortly to confirm all details.</p>
-    <p>A confirmation email has been sent to <strong id="confirmEmail"></strong></p>
-    
-    <div class="confirmation-details">
-      <h3>Booking Summary</h3>
-      <div id="bookingSummary"></div>
-    </div>
-    
-    <button class="btn-secondary" id="closeConfirmation">Close</button>
   </div>
 </div>
 
@@ -557,8 +567,53 @@ textarea {
     padding: 15px;
   }
 }
+
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10001;
+  display: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-suggestions.active {
+  display: block;
+}
+
+.suggestion-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.suggestion-main {
+  font-weight: 500;
+  color: var(--text-dark);
+  font-size: 14px;
+}
 </style>
+
 <script>
+  import { initAddressAutocomplete } from '../utils/addressAutocomplete.js';
+  
   // Variables globales
   let currentStep = 1;
   let fareData = null;
@@ -573,11 +628,17 @@ textarea {
   const returnTripFields = document.getElementById('returnTripFields');
   const sameAsPassengerCheckbox = document.getElementById('sameAsPassenger');
 
-  // Función para abrir el modal
-  function openBookingModal() {
+  // FUNCIÓN PARA ABRIR EL MODAL - EXPONERLA GLOBALMENTE AL INICIO
+  window.openBookingModal = function() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-  }
+    
+    // Inicializar autocompletado en el modal
+    setTimeout(() => {
+      initAddressAutocomplete('pickupLocation');
+      initAddressAutocomplete('dropoffLocation');
+    }, 100);
+  };
 
   // Función para cerrar el modal
   function closeBookingModal() {
@@ -588,17 +649,16 @@ textarea {
 
   // Función para cambiar de paso
   function goToStep(step) {
-    // Ocultar todos los pasos
     document.querySelectorAll('.booking-step').forEach(s => {
       s.classList.remove('active');
     });
     
-    // Mostrar el paso actual
     document.getElementById(`step${step}`).classList.add('active');
     currentStep = step;
     
-    // Scroll al inicio del modal
-    modal.scrollTop = 0;
+    if (modal) {
+      modal.querySelector('.booking-modal-content').scrollTop = 0;
+    }
   }
 
   // Función para resetear el formulario
@@ -606,312 +666,271 @@ textarea {
     currentStep = 1;
     fareData = null;
     bookingData = {};
-    fareEstimateForm.reset();
-    fullBookingForm.reset();
+    if (fareEstimateForm) fareEstimateForm.reset();
+    if (fullBookingForm) fullBookingForm.reset();
     goToStep(1);
   }
 
   // Toggle return trip fields
-  returnTripCheckbox.addEventListener('change', function() {
-    returnTripFields.style.display = this.checked ? 'block' : 'none';
-    if (!this.checked) {
-      document.getElementById('returnDate').value = '';
-      document.getElementById('returnTime').value = '';
-      document.getElementById('waitOnSite').checked = false;
-    }
-  });
+  if (returnTripCheckbox) {
+    returnTripCheckbox.addEventListener('change', function() {
+      returnTripFields.style.display = this.checked ? 'block' : 'none';
+      if (!this.checked) {
+        document.getElementById('returnDate').value = '';
+        document.getElementById('returnTime').value = '';
+        document.getElementById('waitOnSite').checked = false;
+      }
+    });
+  }
 
   // Same as passenger checkbox
-  sameAsPassengerCheckbox.addEventListener('change', function() {
-    if (this.checked) {
-      const passengerFirstName = document.querySelector('input[name="passengerFirstName"]').value;
-      const passengerLastName = document.querySelector('input[name="passengerLastName"]').value;
-      const passengerEmail = document.querySelector('input[name="passengerEmail"]').value;
-      const passengerPhone = document.querySelector('input[name="passengerPhone"]').value;
-      
-      document.getElementById('contactFirstName').value = passengerFirstName;
-      document.getElementById('contactLastName').value = passengerLastName;
-      document.getElementById('contactEmail').value = passengerEmail;
-      document.getElementById('contactPhone').value = passengerPhone;
-    } else {
-      document.getElementById('contactFirstName').value = '';
-      document.getElementById('contactLastName').value = '';
-      document.getElementById('contactEmail').value = '';
-      document.getElementById('contactPhone').value = '';
-    }
-  });
+  if (sameAsPassengerCheckbox) {
+    sameAsPassengerCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        const passengerFirstName = document.querySelector('input[name="passengerFirstName"]').value;
+        const passengerLastName = document.querySelector('input[name="passengerLastName"]').value;
+        const passengerEmail = document.querySelector('input[name="passengerEmail"]').value;
+        const passengerPhone = document.querySelector('input[name="passengerPhone"]').value;
+        
+        document.getElementById('contactFirstName').value = passengerFirstName;
+        document.getElementById('contactLastName').value = passengerLastName;
+        document.getElementById('contactEmail').value = passengerEmail;
+        document.getElementById('contactPhone').value = passengerPhone;
+      } else {
+        document.getElementById('contactFirstName').value = '';
+        document.getElementById('contactLastName').value = '';
+        document.getElementById('contactEmail').value = '';
+        document.getElementById('contactPhone').value = '';
+      }
+    });
+  }
 
   // Manejar envío del formulario de estimación
-  fareEstimateForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(fareEstimateForm);
-    const data = {
-      pickupLocation: formData.get('pickupLocation'),
-      dropoffLocation: formData.get('dropoffLocation'),
-      rideDate: formData.get('rideDate'),
-      rideTime: formData.get('rideTime'),
-      returnTrip: formData.get('returnTrip') === 'on',
-      returnDate: formData.get('returnDate') || null,
-      returnTime: formData.get('returnTime') || null,
-      waitOnSite: formData.get('waitOnSite') === 'on'
-    };
-    
-    // Guardar datos
-    bookingData = { ...data };
-    
-    // Mostrar loading
-    const submitBtn = fareEstimateForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Calculating...';
-    submitBtn.disabled = true;
-    
-    try {
-      // Calcular tarifa para Standard
-      const standardResponse = await fetch('/api/calculate-fare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, vehicleType: 'standard' })
-      });
-      const standardResult = await standardResponse.json();
+  if (fareEstimateForm) {
+    fareEstimateForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      // Calcular tarifa para Wheelchair
-      const wheelchairResponse = await fetch('/api/calculate-fare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, vehicleType: 'wheelchair' })
-      });
-      const wheelchairResult = await wheelchairResponse.json();
+      const formData = new FormData(fareEstimateForm);
+      const data = {
+        pickupLocation: formData.get('pickupLocation'),
+        dropoffLocation: formData.get('dropoffLocation'),
+        rideDate: formData.get('rideDate'),
+        rideTime: formData.get('rideTime'),
+        returnTrip: formData.get('returnTrip') === 'on',
+        returnDate: formData.get('returnDate') || null,
+        returnTime: formData.get('returnTime') || null,
+        waitOnSite: formData.get('waitOnSite') === 'on'
+      };
       
-      if (standardResult.success && wheelchairResult.success) {
-        // Mostrar resultados
-        document.getElementById('tripRoute').textContent = 
-          `${data.pickupLocation} → ${data.dropoffLocation}`;
-        document.getElementById('standardPrice').textContent = 
-          `$${standardResult.fare.finalTotal}`;
-        document.getElementById('wheelchairPrice').textContent = 
-          `$${wheelchairResult.fare.finalTotal}`;
+      // Guardar datos
+      bookingData = { ...data };
+      
+      // Mostrar loading
+      const submitBtn = fareEstimateForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Calculating...';
+      submitBtn.disabled = true;
+      
+      try {
+        // Calcular tarifa para Standard
+        const standardResponse = await fetch('/api/calculate-fare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, vehicleType: 'standard' })
+        });
+        const standardResult = await standardResponse.json();
         
-        fareData = {
-          standard: standardResult.fare,
-          wheelchair: wheelchairResult.fare
-        };
+        // Calcular tarifa para Wheelchair
+        const wheelchairResponse = await fetch('/api/calculate-fare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, vehicleType: 'wheelchair' })
+        });
+        const wheelchairResult = await wheelchairResponse.json();
         
-        goToStep(2);
-      } else {
-        alert('Error calculating fare. Please try again.');
+        if (standardResult.success && wheelchairResult.success) {
+          // Mostrar resultados
+          document.getElementById('tripRoute').textContent = 
+            `${data.pickupLocation} → ${data.dropoffLocation}`;
+          
+          // Mostrar distancia
+          const distanceEl = document.getElementById('tripDistance');
+          if (distanceEl && standardResult.fare.distance) {
+            distanceEl.textContent = `Distance: ${standardResult.fare.distance} miles`;
+          }
+          
+          document.getElementById('standardPrice').textContent = 
+            `$${standardResult.fare.finalTotal}`;
+          document.getElementById('wheelchairPrice').textContent = 
+            `$${wheelchairResult.fare.finalTotal}`;
+          
+          fareData = {
+            standard: standardResult.fare,
+            wheelchair: wheelchairResult.fare
+          };
+          
+          goToStep(2);
+        } else {
+          const errorMsg = standardResult.error || wheelchairResult.error || 'Error calculating fare';
+          alert(`Error: ${errorMsg}. Please check the addresses and try again.`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error calculating fare. Please check your internet connection and try again.');
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error calculating fare. Please try again.');
-    } finally {
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    }
-  });
+    });
+  }
 
   // Botón "Request A Ride" en paso 2
-  document.getElementById('requestRideBtn').addEventListener('click', function() {
-    // Prellenar formulario completo con datos del paso 1
-    document.getElementById('pickupLocationFull').value = bookingData.pickupLocation;
-    document.getElementById('dropoffLocationFull').value = bookingData.dropoffLocation;
-    
-    goToStep(3);
-  });
+  const requestRideBtn = document.getElementById('requestRideBtn');
+  if (requestRideBtn) {
+    requestRideBtn.addEventListener('click', function() {
+      // Prellenar formulario completo con datos del paso 1
+      document.getElementById('pickupLocationFull').value = bookingData.pickupLocation;
+      document.getElementById('dropoffLocationFull').value = bookingData.dropoffLocation;
+      
+      goToStep(3);
+    });
+  }
 
   // Manejar envío del formulario completo
-  fullBookingForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(fullBookingForm);
-    
-    // Recopilar equipos seleccionados
-    const equipment = [];
-    document.querySelectorAll('input[name="equipment"]:checked').forEach(input => {
-      equipment.push(input.value);
-    });
-    
-    // Verificar asistencia adicional
-    const additionalAssistance = 
-      formData.get('assistOrigin') === 'on' || 
-      formData.get('assistDestination') === 'on';
-    
-    const fullBookingData = {
-      // Datos del viaje
-      pickupLocation: bookingData.pickupLocation,
-      dropoffLocation: bookingData.dropoffLocation,
-      rideDate: bookingData.rideDate,
-      rideTime: bookingData.rideTime,
-      returnTrip: bookingData.returnTrip,
-      returnDate: bookingData.returnDate,
-      returnTime: bookingData.returnTime,
-      waitOnSite: bookingData.waitOnSite,
+  if (fullBookingForm) {
+    fullBookingForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      // Tipo de vehículo
-      vehicleType: formData.get('vehicleType'),
-      tripType: formData.get('tripType'),
+      const formData = new FormData(fullBookingForm);
       
-      // Información del pasajero
-      passengerFirstName: formData.get('passengerFirstName'),
-      passengerLastName: formData.get('passengerLastName'),
-      passengerEmail: formData.get('passengerEmail'),
-      passengerPhone: formData.get('passengerPhone'),
-      passengerDOB: formData.get('passengerDOB'),
-      passengerWeight: formData.get('passengerWeight'),
-      passengerGender: formData.get('passengerGender'),
-      
-      // Información de contacto
-      contactFirstName: formData.get('contactFirstName'),
-      contactLastName: formData.get('contactLastName'),
-      contactEmail: formData.get('contactEmail'),
-      contactPhone: formData.get('contactPhone'),
-      
-      // Servicios adicionales
-      equipment: equipment,
-      bedService: formData.get('bedService'),
-      additionalAssistance: additionalAssistance,
-      assistOrigin: formData.get('assistOrigin') === 'on',
-      assistDestination: formData.get('assistDestination') === 'on',
-      
-      // Notas
-      notes: formData.get('notes')
-    };
-    
-    // Mostrar loading
-    const submitBtn = document.getElementById('submitBooking');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Sending...';
-    submitBtn.disabled = true;
-    
-    try {
-      const response = await fetch('/api/send-booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullBookingData)
+      // Recopilar equipos seleccionados
+      const equipment = [];
+      document.querySelectorAll('input[name="equipment"]:checked').forEach(input => {
+        equipment.push(input.value);
       });
       
-      const result = await response.json();
+      // Verificar asistencia adicional
+      const additionalAssistance = 
+        formData.get('assistOrigin') === 'on' || 
+        formData.get('assistDestination') === 'on';
       
-      if (result.success) {
-        // Mostrar confirmación
-        document.getElementById('confirmEmail').textContent = fullBookingData.passengerEmail;
+      const fullBookingData = {
+        // Datos del viaje
+        pickupLocation: bookingData.pickupLocation,
+        dropoffLocation: bookingData.dropoffLocation,
+        rideDate: bookingData.rideDate,
+        rideTime: bookingData.rideTime,
+        returnTrip: bookingData.returnTrip,
+        returnDate: bookingData.returnDate,
+        returnTime: bookingData.returnTime,
+        waitOnSite: bookingData.waitOnSite,
         
-        // Crear resumen
-        const summary = `
-          <p><strong>From:</strong> ${fullBookingData.pickupLocation}</p>
-          <p><strong>To:</strong> ${fullBookingData.dropoffLocation}</p>
-          <p><strong>Date:</strong> ${fullBookingData.rideDate} at ${fullBookingData.rideTime}</p>
-          <p><strong>Vehicle:</strong> ${fullBookingData.vehicleType}</p>
-          <p><strong>Estimated Fare:</strong> $${result.fareDetails.finalTotal}</p>
-        `;
-        document.getElementById('bookingSummary').innerHTML = summary;
+        // Tipo de vehículo
+        vehicleType: formData.get('vehicleType'),
+        tripType: formData.get('tripType'),
         
-        goToStep(4);
-      } else {
+        // Información del pasajero
+        passengerFirstName: formData.get('passengerFirstName'),
+        passengerLastName: formData.get('passengerLastName'),
+        passengerEmail: formData.get('passengerEmail'),
+        passengerPhone: formData.get('passengerPhone'),
+        passengerDOB: formData.get('passengerDOB'),
+        passengerWeight: formData.get('passengerWeight'),
+        passengerGender: formData.get('passengerGender'),
+        
+        // Información de contacto
+        contactFirstName: formData.get('contactFirstName'),
+        contactLastName: formData.get('contactLastName'),
+        contactEmail: formData.get('contactEmail'),
+        contactPhone: formData.get('contactPhone'),
+        
+        // Servicios adicionales
+        equipment: equipment,
+        bedService: formData.get('bedService'),
+        additionalAssistance: additionalAssistance,
+        assistOrigin: formData.get('assistOrigin') === 'on',
+        assistDestination: formData.get('assistDestination') === 'on',
+        
+        // Notas
+        notes: formData.get('notes'),
+        
+        // Distancia (de fareData)
+        distance: fareData?.standard?.distance || 0
+      };
+      
+      // Mostrar loading
+      const submitBtn = document.getElementById('submitBooking');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+      
+      try {
+        const response = await fetch('/api/send-booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fullBookingData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Mostrar confirmación
+          document.getElementById('confirmEmail').textContent = fullBookingData.passengerEmail;
+          
+          // Crear resumen
+          const summary = `
+            <p><strong>From:</strong> ${fullBookingData.pickupLocation}</p>
+            <p><strong>To:</strong> ${fullBookingData.dropoffLocation}</p>
+            <p><strong>Date:</strong> ${fullBookingData.rideDate} at ${fullBookingData.rideTime}</p>
+            <p><strong>Vehicle:</strong> ${fullBookingData.vehicleType}</p>
+            <p><strong>Estimated Fare:</strong> $${result.fareDetails.finalTotal}</p>
+          `;
+          document.getElementById('bookingSummary').innerHTML = summary;
+          
+          goToStep(4);
+        } else {
+          alert('Error submitting booking. Please try again or call us at (352) 623-2608.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
         alert('Error submitting booking. Please try again or call us at (352) 623-2608.');
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error submitting booking. Please try again or call us at (352) 623-2608.');
-    } finally {
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    }
-  });
+    });
+  }
 
   // Cerrar modal
-  closeModalBtn.addEventListener('click', closeBookingModal);
-  document.getElementById('closeConfirmation').addEventListener('click', closeBookingModal);
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeBookingModal);
+  }
+  
+  const closeConfirmationBtn = document.getElementById('closeConfirmation');
+  if (closeConfirmationBtn) {
+    closeConfirmationBtn.addEventListener('click', closeBookingModal);
+  }
 
   // Cerrar al hacer click fuera del modal
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeBookingModal();
-    }
-  });
-
-  // Exponer función para abrir modal globalmente
-  window.openBookingModal = openBookingModal;
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeBookingModal();
+      }
+    });
+  }
 
   // Inicializar fecha mínima
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('rideDate').setAttribute('min', today);
-  document.getElementById('returnDate').setAttribute('min', today);
+  const rideDateInput = document.getElementById('rideDate');
+  const returnDateInput = document.getElementById('returnDate');
+  
+  if (rideDateInput) {
+    rideDateInput.setAttribute('min', today);
+  }
+  if (returnDateInput) {
+    returnDateInput.setAttribute('min', today);
+  }
 
-  // ===== GOOGLE PLACES AUTOCOMPLETE =====
-let pickupAutocomplete, dropoffAutocomplete;
-let pickupAutocompleteModal, dropoffAutocompleteModal;
-
-function initAutocomplete() {
-  // Autocomplete para el formulario del hero
-  const pickupInput = document.getElementById('pickupLocation');
-  const dropoffInput = document.getElementById('dropoffLocation');
-  
-  if (pickupInput && typeof google !== 'undefined') {
-    pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    });
-    
-    pickupAutocomplete.addListener('place_changed', function() {
-      const place = pickupAutocomplete.getPlace();
-      if (place.formatted_address) {
-        pickupInput.value = place.formatted_address;
-      }
-    });
-  }
-  
-  if (dropoffInput && typeof google !== 'undefined') {
-    dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    });
-    
-    dropoffAutocomplete.addListener('place_changed', function() {
-      const place = dropoffAutocomplete.getPlace();
-      if (place.formatted_address) {
-        dropoffInput.value = place.formatted_address;
-      }
-    });
-  }
-  
-  // Autocomplete para el modal (paso 1)
-  const pickupInputModal = document.querySelector('#step1 #pickupLocation');
-  const dropoffInputModal = document.querySelector('#step1 #dropoffLocation');
-  
-  if (pickupInputModal && typeof google !== 'undefined') {
-    pickupAutocompleteModal = new google.maps.places.Autocomplete(pickupInputModal, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    });
-    
-    pickupAutocompleteModal.addListener('place_changed', function() {
-      const place = pickupAutocompleteModal.getPlace();
-      if (place.formatted_address) {
-        pickupInputModal.value = place.formatted_address;
-      }
-    });
-  }
-  
-  if (dropoffInputModal && typeof google !== 'undefined') {
-    dropoffAutocompleteModal = new google.maps.places.Autocomplete(dropoffInputModal, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    });
-    
-    dropoffAutocompleteModal.addListener('place_changed', function() {
-      const place = dropoffAutocompleteModal.getPlace();
-      if (place.formatted_address) {
-        dropoffInputModal.value = place.formatted_address;
-      }
-    });
-  }
-}
-
-// Inicializar cuando Google Maps esté listo
-if (typeof google !== 'undefined') {
-  initAutocomplete();
-} else {
-  window.addEventListener('load', initAutocomplete);
-}
+  console.log('BookingForm initialized - openBookingModal is now available globally');
 </script>

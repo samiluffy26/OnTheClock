@@ -9,51 +9,188 @@ import BookingForm from './BookingForm.astro';
       <p class="hero-subtitle">100% Secure door-to-door transportation and care.</p>
       
       <div class="hero-image-mobile">
-        <img src="/van-with-person.png" alt="On the Clock Transportation Van with Healthcare Provider">
+        <img src="/van-with-person.png" alt="Life Ride Van with Healthcare Provider">
       </div>
     </div>
     
     <div class="fare-estimate-card">
       <h2 class="card-title">Fare Estimate</h2>
       
-      <form id="fareForm" class="fare-form">
+      <form class="fare-form" id="heroFareForm">
         <div class="form-group">
-          <input type="text" id="pickupLocation" placeholder="Pick-Up Location" required>
+          <div class="autocomplete-wrapper">
+            <input 
+              type="text" 
+              id="pickupLocationHero" 
+              name="pickupLocation"
+              placeholder="Pick-Up Location (e.g., Miami, FL)" 
+              autocomplete="off"
+              required
+            >
+            <div id="pickupLocationHero-suggestions" class="autocomplete-suggestions"></div>
+          </div>
         </div>
         
         <div class="form-group">
-          <input type="text" id="dropoffLocation" placeholder="Drop-Off Location" required>
+          <div class="autocomplete-wrapper">
+            <input 
+              type="text" 
+              id="dropoffLocationHero" 
+              name="dropoffLocation"
+              placeholder="Drop-Off Location (e.g., Orlando, FL)" 
+              autocomplete="off"
+              required
+            >
+            <div id="dropoffLocationHero-suggestions" class="autocomplete-suggestions"></div>
+          </div>
         </div>
         
         <div class="form-row">
           <div class="form-group">
-            <input type="date" id="rideDate" required>
+            <input type="date" id="rideDateHero" name="rideDate" required>
           </div>
           <div class="form-group">
-            <input type="time" id="rideTime" required>
+            <input type="time" id="rideTimeHero" name="rideTime" required>
           </div>
         </div>
         
         <div class="form-group checkbox-group">
-          <input type="checkbox" id="returnTrip">
-          <label for="returnTrip">Add a Return Trip</label>
+          <input type="checkbox" id="returnTripHero" name="returnTrip">
+          <label for="returnTripHero">Add a Return Trip</label>
         </div>
         
-        <button type="button" class="btn-submit" onclick="openBookingModal()">Get Estimate</button>
+        <button type="submit" class="btn-submit">Get Estimate</button>
       </form>
     </div>
   </div>
   
   <div class="hero-image-desktop">
-    <img src="/van-with-person.png" alt="On the Clock Transportation Van with Healthcare Provider">
+    <img src="/van-with-person.png" alt="Life Ride Van with Healthcare Provider">
   </div>
 </section>
 
 <BookingForm />
 
+<style>
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-suggestions.active {
+  display: block;
+}
+
+.suggestion-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-main {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+</style>
+
 <script>
-  // Prellenar el modal cuando se hace click en "Get Estimate"
-  document.getElementById('fareForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+  import { initAddressAutocomplete } from '../utils/addressAutocomplete.js';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar autocompletado para los campos del hero
+    initAddressAutocomplete('pickupLocationHero');
+    initAddressAutocomplete('dropoffLocationHero');
+    
+    // Inicializar fecha mínima
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('rideDateHero');
+    if (dateInput) {
+      dateInput.setAttribute('min', today);
+      dateInput.value = today;
+    }
+    
+    // Establecer hora por defecto (opcional)
+    const timeInput = document.getElementById('rideTimeHero');
+    if (timeInput && !timeInput.value) {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      timeInput.value = `${hours}:${minutes}`;
+    }
+    
+    // Manejar envío del formulario
+    const heroForm = document.getElementById('heroFareForm');
+    if (heroForm) {
+      heroForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const pickup = document.getElementById('pickupLocationHero').value.trim();
+        const dropoff = document.getElementById('dropoffLocationHero').value.trim();
+        const date = document.getElementById('rideDateHero').value;
+        const time = document.getElementById('rideTimeHero').value;
+        
+        // Validar campos
+        if (!pickup || !dropoff) {
+          alert('Please enter both pickup and drop-off locations');
+          return;
+        }
+        
+        if (!date || !time) {
+          alert('Please select date and time for your ride');
+          return;
+        }
+        
+        // Abrir modal
+        if (typeof window.openBookingModal === 'function') {
+          window.openBookingModal();
+          
+          // Prellenar el modal con los datos del hero
+          setTimeout(() => {
+            const modalPickup = document.querySelector('#step1 input[name="pickupLocation"]');
+            const modalDropoff = document.querySelector('#step1 input[name="dropoffLocation"]');
+            const modalDate = document.querySelector('#step1 input[name="rideDate"]');
+            const modalTime = document.querySelector('#step1 input[name="rideTime"]');
+            const modalReturn = document.querySelector('#step1 input[name="returnTrip"]');
+            
+            if (modalPickup) modalPickup.value = pickup;
+            if (modalDropoff) modalDropoff.value = dropoff;
+            if (modalDate) modalDate.value = date;
+            if (modalTime) modalTime.value = time;
+            if (modalReturn) {
+              modalReturn.checked = document.getElementById('returnTripHero').checked;
+            }
+          }, 100);
+        } else {
+          console.error('openBookingModal function not found');
+          alert('Error opening booking form. Please try again.');
+        }
+      });
+    }
   });
 </script>

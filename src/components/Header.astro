@@ -17,6 +17,71 @@
         <a href="#how-it-works" class="nav-link">HOW IT WORKS</a>
         <a href="#request" class="btn-primary">REQUEST A RIDE</a>
       </div>
+      <!-- Botones de idioma personalizados -->
+  <div class="language-buttons">
+    <button class="lang-btn active" data-lang="en">
+      🇺🇸 EN
+    </button>
+    <button class="lang-btn" data-lang="es">
+      🇪🇸 ES
+    </button>
+  </div>
+  
+  <a href="#how-it-works" class="nav-link">HOW IT WORKS</a>
+  <button class="btn-primary" onclick="window.openBookingModal()">
+    REQUEST A RIDE
+  </button>
+  
+  <!-- Ocultar el widget de Google -->
+  <div id="google_translate_element" style="display: none;"></div>
     </nav>
   </div>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const langButtons = document.querySelectorAll('.lang-btn');
+  
+  // Esperar a que Google Translate se cargue
+  const checkGoogleTranslate = setInterval(() => {
+    const selectElement = document.querySelector('.goog-te-combo');
+    if (selectElement) {
+      clearInterval(checkGoogleTranslate);
+      
+      // Configurar botones
+      langButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const lang = this.getAttribute('data-lang');
+          
+          // Remover clase active de todos
+          langButtons.forEach(btn => btn.classList.remove('active'));
+          
+          // Agregar clase active al clickeado
+          this.classList.add('active');
+          
+          // Cambiar idioma en Google Translate
+          const select = document.querySelector('.goog-te-combo');
+          if (select) {
+            select.value = lang;
+            select.dispatchEvent(new Event('change'));
+          }
+          
+          // Guardar preferencia
+          localStorage.setItem('preferredLanguage', lang);
+        });
+      });
+      
+      // Restaurar idioma guardado
+      const savedLang = localStorage.getItem('preferredLanguage');
+      if (savedLang && savedLang !== 'en') {
+        setTimeout(() => {
+          const button = document.querySelector(`.lang-btn[data-lang="${savedLang}"]`);
+          if (button) {
+            button.click();
+          }
+        }, 500);
+      }
+    }
+  }, 100);
+});
+</script>
