@@ -58,6 +58,26 @@ import BookingForm from './BookingForm.astro';
           <input type="checkbox" id="returnTripHero" name="returnTrip">
           <label for="returnTripHero">Add a Return Trip</label>
         </div>
+        <div class="form-group checkbox-group">
+  
+</div>
+
+
+<div id="returnTripFieldsHero" class="return-trip-fields" style="display: none;">
+  <div class="form-row">
+    <div class="form-group">
+      <input type="date" id="returnDateHero" name="returnDate" placeholder="Return Date">
+    </div>
+    <div class="form-group">
+      <input type="time" id="returnTimeHero" name="returnTime" placeholder="Return Time">
+    </div>
+  </div>
+  
+  <div class="form-group checkbox-group">
+    <input type="checkbox" id="waitOnSiteHero" name="waitOnSite">
+    <label for="waitOnSiteHero">Wait on site for return trip ($25/hour)</label>
+  </div>
+</div>
         
         <button type="submit" class="btn-submit">Get Estimate</button>
       </form>
@@ -117,6 +137,26 @@ import BookingForm from './BookingForm.astro';
   font-weight: 500;
   color: var(--text-dark);
 }
+
+
+.return-trip-fields {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+  }
+}
 </style>
 
 <script>
@@ -134,6 +174,21 @@ import BookingForm from './BookingForm.astro';
       dateInput.setAttribute('min', today);
       dateInput.value = today;
     }
+
+    const returnTripHeroCheckbox = document.getElementById('returnTripHero');
+  const returnTripFieldsHero = document.getElementById('returnTripFieldsHero');
+  
+  if (returnTripHeroCheckbox && returnTripFieldsHero) {
+    returnTripHeroCheckbox.addEventListener('change', function() {
+      returnTripFieldsHero.style.display = this.checked ? 'block' : 'none';
+      
+      if (!this.checked) {
+        document.getElementById('returnDateHero').value = '';
+        document.getElementById('returnTimeHero').value = '';
+        document.getElementById('waitOnSiteHero').checked = false;
+      }
+    });
+  }
     
     // Establecer hora por defecto (opcional)
     const timeInput = document.getElementById('rideTimeHero');
@@ -172,19 +227,32 @@ import BookingForm from './BookingForm.astro';
           
           // Prellenar el modal con los datos del hero
           setTimeout(() => {
-            const modalPickup = document.querySelector('#step1 input[name="pickupLocation"]');
-            const modalDropoff = document.querySelector('#step1 input[name="dropoffLocation"]');
-            const modalDate = document.querySelector('#step1 input[name="rideDate"]');
-            const modalTime = document.querySelector('#step1 input[name="rideTime"]');
-            const modalReturn = document.querySelector('#step1 input[name="returnTrip"]');
+             const modalPickup = document.querySelector('#step1 input[name="pickupLocation"]');
+    const modalDropoff = document.querySelector('#step1 input[name="dropoffLocation"]');
+    const modalDate = document.querySelector('#step1 input[name="rideDate"]');
+    const modalTime = document.querySelector('#step1 input[name="rideTime"]');
+    const modalReturn = document.querySelector('#step1 input[name="returnTrip"]');
+    
+    // 🆕 AGREGAR CAMPOS DE RETORNO
+    const modalReturnDate = document.querySelector('#step1 input[name="returnDate"]');
+    const modalReturnTime = document.querySelector('#step1 input[name="returnTime"]');
+    const modalWaitOnSite = document.querySelector('#step1 input[name="waitOnSite"]');
+    
             
-            if (modalPickup) modalPickup.value = pickup;
-            if (modalDropoff) modalDropoff.value = dropoff;
-            if (modalDate) modalDate.value = date;
-            if (modalTime) modalTime.value = time;
-            if (modalReturn) {
-              modalReturn.checked = document.getElementById('returnTripHero').checked;
-            }
+             if (modalPickup) modalPickup.value = pickup;
+    if (modalDropoff) modalDropoff.value = dropoff;
+    if (modalDate) modalDate.value = date;
+    if (modalTime) modalTime.value = time;
+    if (modalReturn) {
+      modalReturn.checked = document.getElementById('returnTripHero').checked;
+      // Trigger change event para mostrar campos
+      modalReturn.dispatchEvent(new Event('change'));
+    }
+
+    // 🆕 PRELLENAR CAMPOS DE RETORNO
+    if (modalReturnDate) modalReturnDate.value = document.getElementById('returnDateHero')?.value || '';
+    if (modalReturnTime) modalReturnTime.value = document.getElementById('returnTimeHero')?.value || '';
+    if (modalWaitOnSite) modalWaitOnSite.checked = document.getElementById('waitOnSiteHero')?.checked || false;
           }, 100);
         } else {
           console.error('openBookingModal function not found');

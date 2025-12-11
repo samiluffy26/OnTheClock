@@ -1,7 +1,7 @@
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 
 function calculateDistanceHaversine(lat1, lon1, lat2, lon2) {
-  const R = 3959; // Radio de la Tierra en millas
+  const R = 3959;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   
@@ -21,32 +21,39 @@ function toRad(degrees) {
 }
 
 async function geocodeAddress(address) {
-  const url = `${NOMINATIM_BASE_URL}/search?` + new URLSearchParams({
-    q: address,
-    format: 'json',
-    limit: '1'
-  });
-  
-  const response = await fetch(url, {
-    headers: { 'User-Agent': 'LifeRideApp/1.0' }
-  });
-  
-  const data = await response.json();
-  
-  if (!data || data.length === 0) {
+  try {
+    const url = `${NOMINATIM_BASE_URL}/search?` + new URLSearchParams({
+      q: address,
+      format: 'json',
+      limit: '1'
+    });
+    
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'OnTheClockTransportation/1.0' }
+    });
+    
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    return {
+      lat: parseFloat(data[0].lat),
+      lon: parseFloat(data[0].lon),
+      display_name: data[0].display_name
+    };
+  } catch (error) {
+    console.error('Error geocoding:', error);
     return null;
   }
-  
-  return {
-    lat: parseFloat(data[0].lat),
-    lon: parseFloat(data[0].lon),
-    display_name: data[0].display_name
-  };
 }
 
 export async function POST({ request }) {
   try {
     const { origin, destination } = await request.json();
+    
+    console.log('📍 Calculando distancia:', origin, '→', destination);
     
     if (!origin || !destination) {
       return new Response(JSON.stringify({
@@ -58,7 +65,6 @@ export async function POST({ request }) {
       });
     }
     
-    // Geocodificar ambas direcciones
     const originGeo = await geocodeAddress(origin);
     const destGeo = await geocodeAddress(destination);
     
@@ -82,7 +88,6 @@ export async function POST({ request }) {
       });
     }
     
-    // Calcular distancia en línea recta
     const straightDistance = calculateDistanceHaversine(
       originGeo.lat,
       originGeo.lon,
@@ -90,11 +95,8 @@ export async function POST({ request }) {
       destGeo.lon
     );
     
-    // Aplicar factor de corrección para distancia por carretera
-    // En promedio, la distancia por carretera es ~1.3x la distancia en línea recta
     const distance = straightDistance * 1.3;
     
-    // Estimar duración (velocidad promedio de 45 mph)
     const durationHours = distance / 45;
     const durationMinutes = Math.round(durationHours * 60);
     
@@ -106,6 +108,8 @@ export async function POST({ request }) {
       const mins = durationMinutes % 60;
       durationText = mins > 0 ? `${hours} hr ${mins} mins` : `${hours} hr`;
     }
+    
+    console.log('✅ Distancia calculada:', distance.toFixed(1), 'mi');
     
     return new Response(JSON.stringify({
       success: true,
@@ -120,10 +124,10 @@ export async function POST({ request }) {
     });
     
   } catch (error) {
-    console.error('Error calculating distance:', error);
+    console.error('❌ Error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Server error calculating distance'
+      error: 'Server error: ' + error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

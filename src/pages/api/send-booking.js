@@ -77,11 +77,17 @@ export async function POST({ request }) {
               <span>${bookingData.rideTime}</span>
             </div>
             ${bookingData.returnTrip ? `
-            <div class="info-row">
-              <span class="label">Viaje de regreso:</span>
-              <span>Sí - ${bookingData.returnDate} a las ${bookingData.returnTime || 'Por confirmar'}</span>
-            </div>
-            ` : ''}
+<div class="info-row">
+  <span class="label">Viaje de regreso:</span>
+  <span>Sí - ${bookingData.returnDate} a las ${bookingData.returnTime || 'Por confirmar'}</span>
+</div>
+${bookingData.waitOnSite ? `
+<div class="info-row">
+  <span class="label">Esperar en el sitio:</span>
+  <span>Sí${fareDetails.waitTimeHours > 0 ? ` (${fareDetails.waitTimeHours} horas - $${fareDetails.waitTimeCost})` : ''}</span>
+</div>
+` : ''}
+` : ''}
           </div>
           
           <div class="section">

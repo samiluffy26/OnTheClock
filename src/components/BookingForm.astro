@@ -712,16 +712,15 @@ textarea {
       
       const formData = new FormData(fareEstimateForm);
       const data = {
-        pickupLocation: formData.get('pickupLocation'),
-        dropoffLocation: formData.get('dropoffLocation'),
-        rideDate: formData.get('rideDate'),
-        rideTime: formData.get('rideTime'),
-        returnTrip: formData.get('returnTrip') === 'on',
-        returnDate: formData.get('returnDate') || null,
-        returnTime: formData.get('returnTime') || null,
-        waitOnSite: formData.get('waitOnSite') === 'on'
-      };
-      
+  pickupLocation: formData.get('pickupLocation'),
+  dropoffLocation: formData.get('dropoffLocation'),
+  rideDate: formData.get('rideDate'),
+  rideTime: formData.get('rideTime'),
+  returnTrip: formData.get('returnTrip') === 'on',
+  returnDate: formData.get('returnDate') || null,
+  returnTime: formData.get('returnTime') || null,
+  waitOnSite: formData.get('waitOnSite') === 'on'
+};
       // Guardar datos
       bookingData = { ...data };
       
@@ -749,27 +748,37 @@ textarea {
         const wheelchairResult = await wheelchairResponse.json();
         
         if (standardResult.success && wheelchairResult.success) {
-          // Mostrar resultados
-          document.getElementById('tripRoute').textContent = 
-            `${data.pickupLocation} → ${data.dropoffLocation}`;
-          
-          // Mostrar distancia
-          const distanceEl = document.getElementById('tripDistance');
-          if (distanceEl && standardResult.fare.distance) {
-            distanceEl.textContent = `Distance: ${standardResult.fare.distance} miles`;
-          }
-          
-          document.getElementById('standardPrice').textContent = 
-            `$${standardResult.fare.finalTotal}`;
-          document.getElementById('wheelchairPrice').textContent = 
-            `$${wheelchairResult.fare.finalTotal}`;
-          
-          fareData = {
-            standard: standardResult.fare,
-            wheelchair: wheelchairResult.fare
-          };
-          
-          goToStep(2);
+  // Mostrar resultados
+  document.getElementById('tripRoute').textContent = 
+    `${data.pickupLocation} → ${data.dropoffLocation}`;
+  
+  // 🆕 MEJORAR visualización de distancia y detalles
+  const distanceEl = document.getElementById('tripDistance');
+  if (distanceEl && standardResult.fare.distance) {
+    let detailsText = `Distance: ${standardResult.fare.distance} miles`;
+    
+    // Agregar info de return trip
+    if (data.returnTrip) {
+      detailsText += ` • Round Trip`;
+      if (data.waitOnSite && standardResult.fare.waitTimeHours > 0) {
+        detailsText += ` • Wait Time: ${standardResult.fare.waitTimeHours} hours`;
+      }
+    }
+    
+    distanceEl.textContent = detailsText;
+  }
+  
+  document.getElementById('standardPrice').textContent = 
+    `$${standardResult.fare.finalTotal}`;
+  document.getElementById('wheelchairPrice').textContent = 
+    `$${wheelchairResult.fare.finalTotal}`;
+  
+  fareData = {
+    standard: standardResult.fare,
+    wheelchair: wheelchairResult.fare
+  };
+  
+  goToStep(2);
         } else {
           const errorMsg = standardResult.error || wheelchairResult.error || 'Error calculating fare';
           alert(`Error: ${errorMsg}. Please check the addresses and try again.`);

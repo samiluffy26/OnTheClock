@@ -4,7 +4,8 @@ export async function POST({ request }) {
   try {
     const data = await request.json();
     
-    // Validar datos requeridos
+    console.log('📥 Datos recibidos:', data);
+    
     if (!data.pickupLocation || !data.dropoffLocation) {
       return new Response(JSON.stringify({
         success: false,
@@ -15,10 +16,11 @@ export async function POST({ request }) {
       });
     }
     
-    // Si no viene la distancia, calcularla
     let distance = data.distance;
+    
     if (!distance) {
-      // Calcular distancia usando Google Maps
+      console.log('🔍 Calculando distancia...');
+      
       const distanceResponse = await fetch(`${new URL(request.url).origin}/api/calculate-distance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,13 +31,14 @@ export async function POST({ request }) {
       });
       
       const distanceData = await distanceResponse.json();
+      console.log('📏 Distancia:', distanceData);
       
       if (distanceData.success) {
         distance = distanceData.distance;
       } else {
         return new Response(JSON.stringify({
           success: false,
-          error: 'Could not calculate distance'
+          error: distanceData.error || 'Could not calculate distance'
         }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -43,11 +46,14 @@ export async function POST({ request }) {
       }
     }
     
-    // Calcular tarifa
+    console.log('💰 Calculando tarifa...');
+    
     const fareDetails = calculateFare({
       ...data,
       distance: distance
     });
+    
+    console.log('✅ Tarifa calculada:', fareDetails);
     
     return new Response(JSON.stringify({
       success: true,
@@ -58,10 +64,10 @@ export async function POST({ request }) {
     });
     
   } catch (error) {
-    console.error('Error calculating fare:', error);
+    console.error('❌ Error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Error calculating fare'
+      error: 'Error calculating fare: ' + error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
