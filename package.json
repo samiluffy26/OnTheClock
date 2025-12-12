@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/node": "^9.5.1",
     "@astrojs/vercel": "^9.0.2",
+    "@sendgrid/mail": "^8.1.6",
     "astro": "^5.14.3",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",

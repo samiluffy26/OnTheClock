@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import reviewsRoutes from './routes/reviews.js';
 import { handler as ssrHandler } from '../dist/server/entry.mjs';
 import emailRouter from "./routes/email.js";
+import emailRoutes from './routes/email.js';
 
 
 
@@ -29,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes ANTES del handler de Astro
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use("/api/email", emailRouter)
+app.use('/api/email', emailRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
