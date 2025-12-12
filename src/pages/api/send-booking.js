@@ -1,23 +1,51 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import nodemailer from 'nodemailer';
 import { calculateFare } from '../../utils/pricing.js';
 
-// CONFIGURACIÓN DE CORREO
-// IMPORTANTE: Actualiza estas credenciales con las reales
+// ✅ USAR process.env en lugar de import.meta.env
 const EMAIL_CONFIG = {
-  host: import.meta.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(import.meta.env.EMAIL_PORT) || 587,
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT) || 587,
   secure: false,
   auth: {
-    user: import.meta.env.EMAIL_USER,
-    pass: import.meta.env.EMAIL_PASS
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 };
 
-const COMPANY_EMAIL = import.meta.env.COMPANY_EMAIL || 'info@liferide.com'; // Email donde llegarán las reservas
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'daviddiaz@ontheclocktrans.com';
 
 export async function POST({ request }) {
   try {
     const bookingData = await request.json();
+    
+    console.log('📧 Enviando email de reserva...');
+    console.log('📧 Config:', {
+      host: EMAIL_CONFIG.host,
+      port: EMAIL_CONFIG.port,
+      user: EMAIL_CONFIG.auth.user,
+      hasPassword: !!EMAIL_CONFIG.auth.pass,
+      passwordLength: EMAIL_CONFIG.auth.pass?.length || 0
+    });
+    
+    // Validar credenciales
+    if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
+      console.error('❌ Faltan credenciales de email');
+      console.error('EMAIL_USER:', process.env.EMAIL_USER);
+      console.error('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Email credentials not configured'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
     
     // Validar datos
     if (!bookingData.passengerEmail || !bookingData.pickupLocation) {
@@ -30,13 +58,43 @@ export async function POST({ request }) {
       });
     }
     
+    // ✅ CONVERTIR distance a número si viene como string
+    const bookingDataFixed = {
+      ...bookingData,
+      distance: typeof bookingData.distance === 'string' 
+        ? parseFloat(bookingData.distance) 
+        : bookingData.distance
+    };
+    
+    console.log('📊 Datos para calcular tarifa:', {
+      distance: bookingDataFixed.distance,
+      distanceType: typeof bookingDataFixed.distance,
+      vehicleType: bookingDataFixed.vehicleType
+    });
+    
     // Calcular tarifa
-    const fareDetails = calculateFare(bookingData);
+    const fareDetails = calculateFare(bookingDataFixed);
     
     // Crear transporter
     const transporter = nodemailer.createTransport(EMAIL_CONFIG);
     
-    // Email para la empresa
+    // Verificar conexión
+    console.log('🔌 Verificando conexión SMTP...');
+    try {
+      await transporter.verify();
+      console.log('✅ Conexión SMTP verificada');
+    } catch (verifyError) {
+      console.error('❌ Error verificando SMTP:', verifyError.message);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Email server error: ' + verifyError.message
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Email HTML para la empresa
     const companyEmailHTML = `
       <!DOCTYPE html>
       <html>
@@ -55,45 +113,35 @@ export async function POST({ request }) {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Nueva Solicitud de Viaje - On the Clock Transportation</h1>
+            <h1>New Booking Request</h1>
           </div>
           
           <div class="section">
-            <h3>📍 Detalles del Viaje</h3>
+            <h3>📍 Trip Details</h3>
             <div class="info-row">
-              <span class="label">Origen:</span>
+              <span class="label">From:</span>
               <span>${bookingData.pickupLocation}</span>
             </div>
             <div class="info-row">
-              <span class="label">Destino:</span>
+              <span class="label">To:</span>
               <span>${bookingData.dropoffLocation}</span>
             </div>
             <div class="info-row">
-              <span class="label">Fecha:</span>
-              <span>${bookingData.rideDate}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Hora:</span>
-              <span>${bookingData.rideTime}</span>
+              <span class="label">Date:</span>
+              <span>${bookingData.rideDate} at ${bookingData.rideTime}</span>
             </div>
             ${bookingData.returnTrip ? `
-<div class="info-row">
-  <span class="label">Viaje de regreso:</span>
-  <span>Sí - ${bookingData.returnDate} a las ${bookingData.returnTime || 'Por confirmar'}</span>
-</div>
-${bookingData.waitOnSite ? `
-<div class="info-row">
-  <span class="label">Esperar en el sitio:</span>
-  <span>Sí${fareDetails.waitTimeHours > 0 ? ` (${fareDetails.waitTimeHours} horas - $${fareDetails.waitTimeCost})` : ''}</span>
-</div>
-` : ''}
-` : ''}
+            <div class="info-row">
+              <span class="label">Return Trip:</span>
+              <span>Yes - ${bookingData.returnDate || 'TBD'} at ${bookingData.returnTime || 'TBD'}</span>
+            </div>
+            ` : ''}
           </div>
           
           <div class="section">
-            <h3>👤 Información del Pasajero</h3>
+            <h3>👤 Passenger</h3>
             <div class="info-row">
-              <span class="label">Nombre:</span>
+              <span class="label">Name:</span>
               <span>${bookingData.passengerFirstName} ${bookingData.passengerLastName}</span>
             </div>
             <div class="info-row">
@@ -101,107 +149,47 @@ ${bookingData.waitOnSite ? `
               <span>${bookingData.passengerEmail}</span>
             </div>
             <div class="info-row">
-              <span class="label">Teléfono:</span>
+              <span class="label">Phone:</span>
               <span>${bookingData.passengerPhone}</span>
             </div>
-            ${bookingData.passengerDOB ? `
-            <div class="info-row">
-              <span class="label">Fecha de Nacimiento:</span>
-              <span>${bookingData.passengerDOB}</span>
-            </div>
-            ` : ''}
-            ${bookingData.passengerWeight ? `
-            <div class="info-row">
-              <span class="label">Peso:</span>
-              <span>${bookingData.passengerWeight} lbs</span>
-            </div>
-            ` : ''}
-            ${bookingData.passengerGender ? `
-            <div class="info-row">
-              <span class="label">Género:</span>
-              <span>${bookingData.passengerGender}</span>
-            </div>
-            ` : ''}
           </div>
           
           <div class="section">
-            <h3>🚐 Tipo de Vehículo</h3>
+            <h3>🚐 Vehicle</h3>
             <div class="info-row">
-              <span class="label">Vehículo:</span>
-              <span>${bookingData.vehicleType === 'wheelchair' ? 'Wheelchair Accessible Van' : bookingData.vehicleType === 'ambulance' ? 'Non-Emergency Ambulance' : 'Standard Van'}</span>
+              <span class="label">Type:</span>
+              <span>${bookingData.vehicleType}</span>
             </div>
           </div>
-          
-          ${bookingData.bedService && bookingData.bedService !== 'none' ? `
-          <div class="section">
-            <h3>🛏️ Servicio de Cama</h3>
-            <div class="info-row">
-              <span>${bookingData.bedService}</span>
-            </div>
-          </div>
-          ` : ''}
-          
-          ${bookingData.equipment && bookingData.equipment.length > 0 ? `
-          <div class="section">
-            <h3>🔧 Equipo Adicional</h3>
-            ${bookingData.equipment.map(eq => `<div class="info-row"><span>${eq}</span></div>`).join('')}
-          </div>
-          ` : ''}
           
           ${bookingData.notes ? `
           <div class="section">
-            <h3>📝 Notas</h3>
+            <h3>📝 Notes</h3>
             <p>${bookingData.notes}</p>
           </div>
           ` : ''}
           
           <div class="section">
-            <h3>💰 Detalles de Tarifa</h3>
+            <h3>💰 Fare</h3>
             <div class="info-row">
-              <span class="label">Distancia estimada:</span>
-              <span>${fareDetails.distance} millas</span>
+              <span class="label">Distance:</span>
+              <span>${fareDetails.distance} miles</span>
             </div>
             <div class="info-row">
-              <span class="label">Tarifa base:</span>
+              <span class="label">Base Fare:</span>
               <span>$${fareDetails.baseFare}</span>
             </div>
-            ${fareDetails.vehicleCharge > 0 ? `
-            <div class="info-row">
-              <span class="label">Cargo por vehículo:</span>
-              <span>$${fareDetails.vehicleCharge}</span>
-            </div>
-            ` : ''}
-            ${fareDetails.additionalCosts > 0 ? `
-            <div class="info-row">
-              <span class="label">Cargos adicionales:</span>
-              <span>$${fareDetails.additionalCosts}</span>
-            </div>
-            ` : ''}
-            <div class="info-row">
-              <span class="label">Total ida:</span>
-              <span>$${fareDetails.oneWayTotal}</span>
-            </div>
-            ${fareDetails.returnTripCost ? `
-            <div class="info-row">
-              <span class="label">Total regreso:</span>
-              <span>$${fareDetails.returnTripCost}</span>
-            </div>
-            ` : ''}
           </div>
           
           <div class="total">
             TOTAL: $${fareDetails.finalTotal}
           </div>
-          
-          <p style="text-align: center; color: #666; font-size: 14px;">
-            Esta es una solicitud automática. Por favor contacte al cliente para confirmar.
-          </p>
         </div>
       </body>
       </html>
     `;
     
-    // Email de confirmación para el cliente
+    // Email para el cliente
     const customerEmailHTML = `
       <!DOCTYPE html>
       <html>
@@ -212,66 +200,62 @@ ${bookingData.waitOnSite ? `
           .header { background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color: white; padding: 20px; text-align: center; }
           .section { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
           .total { font-size: 24px; color: #1E40AF; font-weight: bold; text-align: center; padding: 20px; background: #e8f4ff; margin: 20px 0; border-radius: 5px; }
-          .contact { text-align: center; padding: 20px; background: #f0f0f0; margin: 20px 0; border-radius: 5px; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>¡Solicitud Recibida!</h1>
-            <p>Gracias por elegir On the Clock Transportation</p>
+            <h1>Booking Confirmed!</h1>
           </div>
           
           <div class="section">
-            <h3>Hola ${bookingData.passengerFirstName},</h3>
-            <p>Hemos recibido tu solicitud de viaje. Nos pondremos en contacto contigo pronto para confirmar todos los detalles.</p>
+            <h3>Hello ${bookingData.passengerFirstName},</h3>
+            <p>We have received your booking request. We will contact you soon to confirm.</p>
           </div>
           
           <div class="section">
-            <h3>📍 Resumen de tu Viaje</h3>
-            <p><strong>Desde:</strong> ${bookingData.pickupLocation}</p>
-            <p><strong>Hasta:</strong> ${bookingData.dropoffLocation}</p>
-            <p><strong>Fecha:</strong> ${bookingData.rideDate} a las ${bookingData.rideTime}</p>
-            ${bookingData.returnTrip ? `<p><strong>Regreso:</strong> ${bookingData.returnDate}</p>` : ''}
+            <h3>📍 Trip Summary</h3>
+            <p><strong>From:</strong> ${bookingData.pickupLocation}</p>
+            <p><strong>To:</strong> ${bookingData.dropoffLocation}</p>
+            <p><strong>Date:</strong> ${bookingData.rideDate} at ${bookingData.rideTime}</p>
           </div>
           
           <div class="total">
-            Tarifa Estimada: $${fareDetails.finalTotal}
+            Estimated Fare: $${fareDetails.finalTotal}
           </div>
           
-          <div class="contact">
-            <h3>¿Tienes preguntas?</h3>
-            <p>Llámanos al: <strong>(551) 225-0080</strong></p>
+          <div class="section" style="text-align: center;">
+            <h3>Questions?</h3>
+            <p>Call: <strong>(352) 623-2608</strong></p>
             <p>Email: <strong>${COMPANY_EMAIL}</strong></p>
           </div>
-          
-          <p style="text-align: center; color: #666; font-size: 12px;">
-            Este es un email automático de confirmación. Por favor no respondas a este correo.
-          </p>
         </div>
       </body>
       </html>
     `;
     
-    // Enviar email a la empresa
+    // Enviar emails
+    console.log('📧 Enviando email a la empresa...');
     await transporter.sendMail({
-      from: EMAIL_CONFIG.auth.user,
+      from: `"On the Clock Transportation" <${EMAIL_CONFIG.auth.user}>`,
       to: COMPANY_EMAIL,
-      subject: `Nueva Solicitud de Viaje - ${bookingData.passengerFirstName} ${bookingData.passengerLastName}`,
+      subject: `New Booking - ${bookingData.passengerFirstName} ${bookingData.passengerLastName}`,
       html: companyEmailHTML
     });
     
-    // Enviar confirmación al cliente
+    console.log('📧 Enviando confirmación al cliente...');
     await transporter.sendMail({
-      from: EMAIL_CONFIG.auth.user,
+      from: `"On the Clock Transportation" <${EMAIL_CONFIG.auth.user}>`,
       to: bookingData.passengerEmail,
-      subject: 'Confirmación de Solicitud - On the Clock Transportation',
+      subject: 'Booking Confirmation - On the Clock Transportation',
       html: customerEmailHTML
     });
     
+    console.log('✅ Emails enviados exitosamente');
+    
     return new Response(JSON.stringify({
       success: true,
-      message: 'Booking request sent successfully',
+      message: 'Booking sent successfully',
       fareDetails: fareDetails
     }), {
       status: 200,
@@ -279,10 +263,10 @@ ${bookingData.waitOnSite ? `
     });
     
   } catch (error) {
-    console.error('Error sending booking:', error);
+    console.error('❌ Error sending booking:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Error processing booking request'
+      error: error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
