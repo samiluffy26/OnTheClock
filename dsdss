@@ -1,0 +1,38 @@
+[33mfeec56b0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m resolviendo errores en git esolviendo errores
+[33m7b273982[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Cansado 2
+[33m78f48fe1[m Cansado
+[33m4c13e465[m Improve send-booking error handling and validation
+[33m22831786[m Improve send-booking
+[33m4ba693c4[m Improve send-booking error handling and validation
+[33mf7bdbebe[m Add email API endpoint
+[33macac2d78[m Fix API endpoint path
+[33m78745146[m Fix pricing.js import path
+[33m04ec8b1e[m Probando formulario
+[33me50cbd93[m Fix Render configuration for Astro SSR
+[33m72e33b2b[m Formulario de correos.
+[33m4c8d0766[m footer ubi
+[33mfdf4508f[m logito azul
+[33m6d5004a1[m avaliable
+[33m5eaf0473[m Agregando modals al return trip
+[33m611e9511[m Arregle algo del numero
+[33m395b38fe[m Arregle algo del Header
+[33maee8b424[m Agregamos el auto-completado para las ubicaciones, y pusimos que la pagina se pueda traducir al espanol
+[33m75995788[m Fix: Configuración SSR con Express y Astro
+[33m4c61717d[m Configure for Render deployment
+[33m1aef25ca[m Me canse
+[33m4ad038ee[m resolvi el error?
+[33m182a51fb[m INtentando resolver el error
+[33m2a391aa6[m fix: remove invalid options route causing PathError
+[33m0770ec99[m fix: use define:vars for API_BASE injection
+[33mb04b1c98[m Force AGAIN
+[33mb779c62d[m Force new again build - update API URL
+[33mea8efb7f[m Force AGAIN  build - update API URL
+[33m22c048a1[m Force new build - update API URL
+[33md259c6ec[m Configure backend for Vercel and Render deployment
+[33m1202617e[m Configure backend for Render deployment
+[33m64c3b0a1[m Arreglando backend
+[33mc0ed474a[m mejorando esto
+[33ma311a871[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mrecovery[m[33m, [m[1;32mmaster[m[33m)[m Listo
+[33m02182c6e[m[33m ([m[1;31morigin/recuperar-estado[m[33m, [m[1;32mrecuperar-estado[m[33m)[m Agregamos uun boton flotante en la esquina inferior derecha. Modal elegante con 3 pestanas (Cash App, Zelle, Other) Codigo QR grandes y claros. Instrucciones paso a paso. Informacion alternativa (cashtag, email). Responsive para movil y desktop. Cierre con Escape, overlay o boton X.  OJO: el boton solo muestra una tarjeta en movil para noocupar espacio, y en desktop muestra "Payment Methods".
+[33m9360505f[m Agregue dashboard para que Los admins puedan aceptar, rechazar, eliminar y destacar reseñas. Del lado public los clientes pueden enviar reseñas y ver las reseñas. Para esto cree un pequeño backend con Express como framework y mongo atlas como base de datos. Inclui dos pages, una para el login de admin y otra para el dasboard, asi como un componente nuevo para las reseñas, y otro para el anuncio de que tienen delivery para medicamentos.
+[33mbd5983be[m LandingPage para un cliente
