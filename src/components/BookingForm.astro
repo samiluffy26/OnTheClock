@@ -874,7 +874,7 @@ textarea {
       submitBtn.disabled = true;
       
       try {
-        const response = await fetch('/api/send-booking', {
+        const response = await fetch('/api/email/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(fullBookingData)

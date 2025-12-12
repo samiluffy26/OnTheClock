@@ -5,6 +5,9 @@ import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import reviewsRoutes from './routes/reviews.js';
 import { handler as ssrHandler } from '../dist/server/entry.mjs';
+import emailRouter from "./routes/email.js";
+
+
 
 dotenv.config();
 
@@ -26,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes ANTES del handler de Astro
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use("/api/email", emailRouter)
 
 // Health check
 app.get('/health', (req, res) => {
