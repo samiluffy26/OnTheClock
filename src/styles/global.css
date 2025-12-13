@@ -204,6 +204,7 @@ a {
     display: none;
 }
 
+
 .hero-image-desktop {
     position: absolute;
     bottom: -200px;
@@ -216,6 +217,63 @@ a {
 .hero-image-desktop img {
     width: 100%;
     height: auto;
+}
+
+/* Ajustes responsive para la imagen del van */
+@media (max-width: 1600px) {
+    .hero-image-desktop {
+        left: 250px;
+        width: 45%;
+        max-width: 550px;
+        bottom: -180px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .hero-image-desktop {
+        left: 200px;
+        width: 42%;
+        max-width: 480px;
+        bottom: -150px;
+    }
+}
+
+@media (max-width: 1300px) {
+    .hero-image-desktop {
+        left: 150px;
+        width: 38%;
+        max-width: 420px;
+        bottom: -120px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .hero-image-desktop {
+        left: 100px;
+        width: 35%;
+        max-width: 380px;
+        bottom: -100px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .hero-image-desktop {
+        left: 50px;
+        width: 32%;
+        max-width: 340px;
+        bottom: -80px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero-image-desktop {
+        display: none;
+    }
+    
+    .hero-image-mobile {
+        display: block;
+        margin-top: var(--spacing-md);
+    }
 }
 
 /* ============================================
