@@ -127,7 +127,7 @@ const API_BASE = '';  // Vacío = mismo servidor
     </main>
   </div>
 
-  <script>
+  <script define:vars={{ API_BASE }}>
      window.API_BASE = API_BASE;
 const API_URL = `${API_BASE}/api`;  // Quedará como '/api'
   window.API_URL = API_URL;
