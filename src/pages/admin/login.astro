@@ -1,6 +1,5 @@
 ---
 // frontmatter: inyectar variable del build en el HTML cliente
-const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL ?? '';
 const API_BASE = '';  // Vacío = mismo servidor
 ---
 
@@ -233,74 +232,70 @@ const API_BASE = '';  // Vacío = mismo servidor
     </div>
   </div>
 
-  
+  <script define:vars={{ API_BASE }}>
+    // Ahora API_BASE está correctamente inyectado desde el servidor
+    window.API_BASE = API_BASE;
+    const API_URL = `${API_BASE}/api`;  // Quedará como '/api'
+    
+    window.API_URL = API_URL;
+    console.log('Frontend API_URL:', API_URL);
 
-  <script>
-  // Inyectado desde server-side (Astro). API_BASE no incluye /final slash.
- window.API_BASE = API_BASE;
-  // Define API_URL listo para usar por el código cliente (con /api)
-const API_URL = `${API_BASE}/api`;  // Quedará como '/api'
-  // exponemos para debugging
-  window.API_URL = API_URL;
-  console.log('Frontend API_URL:', API_URL);
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const alert = document.getElementById('alert');
 
-  // --- el resto de tu script cliente abajo usa API_URL ---
-  const form = document.getElementById('loginForm');
-  const loginBtn = document.getElementById('loginBtn');
-  const alert = document.getElementById('alert');
-
-  function showAlert(message, type = 'error') {
-    alert.textContent = message;
-    alert.className = `alert ${type} active`;  // ✅ CORRECTO
-    setTimeout(() => {
-      alert.classList.remove('active');
-    }, 5000);
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    loginBtn.innerHTML = '<span class="loading-spinner"></span>Signing in...';
-    loginBtn.disabled = true;
-
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminData', JSON.stringify(data.admin));
-        showAlert('Login successful! Redirecting...', 'success');
-        setTimeout(() => {
-          window.location.href = '/admin/dashboard';
-        }, 1000);
-      } else {
-        showAlert(data.message || 'Invalid credentials. Please try again.');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      showAlert('Connection error. Please check if the server is running.');
-    } finally {
-      loginBtn.innerHTML = 'Sign In';
-      loginBtn.disabled = false;
+    function showAlert(message, type = 'error') {
+      alert.textContent = message;
+      alert.className = `alert ${type} active`;
+      setTimeout(() => {
+        alert.classList.remove('active');
+      }, 5000);
     }
-  });
 
-  // Check if already logged in
-  const token = localStorage.getItem('adminToken');
-  if (token) {
-    window.location.href = '/admin/dashboard';
-  }
-</script>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      loginBtn.innerHTML = '<span class="loading-spinner"></span>Signing in...';
+      loginBtn.disabled = true;
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminData', JSON.stringify(data.admin));
+          showAlert('Login successful! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = '/admin/dashboard';
+          }, 1000);
+        } else {
+          showAlert(data.message || 'Invalid credentials. Please try again.');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Connection error. Please check if the server is running.');
+      } finally {
+        loginBtn.innerHTML = 'Sign In';
+        loginBtn.disabled = false;
+      }
+    });
+
+    // Check if already logged in
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      window.location.href = '/admin/dashboard';
+    }
+  </script>
 </body>
 </html>
